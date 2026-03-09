@@ -1,0 +1,50 @@
+@import url('https://fonts.googleapis.com/css2?family=Anek+Bangla:wght@100..800&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&family=Nunito:ital,wght@0,200..1000;1,200..1000&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bungee&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Nata+Sans:wght@100..900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Rubik:ital,wght@0,300..900;1,300..900&display=swap');
+@import "tailwindcss";
+
+.gaming-button-gradient {
+  background: linear-gradient(to right, #448fa3 0%, #7d7d7d 100%) !important;
+  box-shadow: 
+    inset 0px 2px 4px rgba(255, 255, 255, 0.4), 
+    0px 10px 20px -5px rgba(67, 143, 163, 0.4) !important;
+}
+
+.auth-header-text {
+  font-family: 'Playfair Display', serif;
+}
+@theme{
+  --color-theme_color:#00352F;
+  --color-theme_color2:#0FD9F1;
+  --font-anek:"Anek Bangla", sans-serif;
+  --font-bungee:"Bungee", sans-serif;
+}
+/* width */
+::-webkit-scrollbar {
+    width: 0px;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+.main-box{
+    overflow-x: hidden;
+}
+
+.shadow-custom-3d {
+  box-shadow: 
+    0 4px 6px rgba(0, 0, 0, 0.1), /* Standard shadow */
+    0 1px 3px rgba(0, 0, 0, 0.08), /* Lighter shadow for depth */
+    0 8px 15px -3px rgba(0, 0, 0, 0.2); /* A wider, softer shadow for the "lifted" look */
+}
+/* Handle */
+::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 5px;
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
