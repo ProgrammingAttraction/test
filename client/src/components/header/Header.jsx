@@ -51,8 +51,12 @@ import {
   FaLink, 
   FaQuestionCircle 
 } from 'react-icons/fa';
-import { FaUserCircle } from "react-icons/fa";
+import { PiMoneyWavy } from "react-icons/pi";
+import { FaBangladeshiTakaSign } from "react-icons/fa6";
 
+import { FaUserCircle } from "react-icons/fa";
+import { FiMessageCircle } from 'react-icons/fi';
+import { GiSoccerBall } from 'react-icons/gi';
 import casino_img from "../../assets/chip.png";
 import { FiHome, FiSearch, FiBookmark, FiUser, FiSettings } from 'react-icons/fi';
 import { FaBookmark } from 'react-icons/fa';
@@ -262,13 +266,40 @@ useEffect(() => {
     { code: 'en', name: 'English', flag: 'https://images.5849492029.com//TCG_PROD_IMAGES/COUNTRY_FLAG/CIRCLE/US.svg' }
   ];
 
-  const navItems = [
-    { id: 'home', label: t.home, path: '/', icon: <FiHome className="w-5 h-5" />, activeIcon: <FaHome className="w-5 h-5" />, requiresAuth: false },
-    { id: 'slots', label: t.slots, path: '/slot-games', icon: <FaDice className="w-5 h-5" />, activeIcon: <FaDice className="w-5 h-5 text-yellow-400" />, requiresAuth: true },
-    { id: 'profile', label: t.profile, path: '/profile', icon: <FiUser className="w-7 h-7" />, activeIcon: <FaUser className="w-7 h-7 text-blue-400" />, requiresAuth: true },
-    { id: 'casino', label: t.casino, path: '/casino-games', icon: <FaCoins className="w-5 h-5" />, activeIcon: <FaCoins className="w-5 h-5 text-yellow-400" />, requiresAuth: true },
-    { id: 'refer', label: t.refer, path: '/refer-programme', icon: <FaUserFriends className="w-5 h-5" />, activeIcon: <FaUserFriends className="w-5 h-5 text-blue-400" />, requiresAuth: true },
-  ];
+const navItems = [
+  { 
+    id: 'casino', 
+    label: 'Casino', 
+    path: '/casino-games', 
+    icon: <FaCoins className="w-5 h-5" />, 
+    activeIcon: <FaCoins className="w-5 h-5 text-yellow-400" />, 
+    requiresAuth: true 
+  },
+  { 
+    id: 'profile', 
+    label: 'Deposit', 
+    path: '/deposit', 
+    icon: <PiMoneyWavy className="w-7 h-7" />, 
+    activeIcon: <FaUser className="w-7 h-7 text-blue-400" />, 
+    requiresAuth: true 
+  },
+  { 
+    id: 'sports', 
+    label: 'Sports', 
+    path: '/sports', 
+    icon: <GiSoccerBall className="w-5 h-5" />, 
+    activeIcon: <GiSoccerBall className="w-5 h-5 text-green-400" />, 
+    requiresAuth: true 
+  },
+  { 
+    id: 'livechat', 
+    label: 'Live Chat', 
+    path: '/live-chat', 
+    icon: <FiMessageCircle className="w-5 h-5" />, 
+    activeIcon: <FiMessageCircle className="w-5 h-5 text-purple-400" />, 
+    requiresAuth: false 
+  }
+];
 
   const isCenterItem = (item) => item.id === 'profile';
   const selectLanguage = (lang) => {
@@ -697,7 +728,7 @@ const menuItems = [
             closeSidebar();
           }
         }}
-        className="flex items-center gap-4 px-3 py-3 text-gray-800 cursor-pointer transition-colors"
+        className="flex items-center bg-white rounded-r-[25px] gap-4 px-3  py-2 text-gray-800 cursor-pointer transition-colors"
       >
         <span className='text-[20px]'>{item.icon}</span>
         <span className=" font-[500]">{item.label}</span>
@@ -1000,123 +1031,73 @@ useEffect(() => {
           }
         }} />
 {/* ──────────────────────────────────────────────────────────────
-   Right side of the header (language + support + auth)
+   Right side of the header (Authenticated State - Match Image)
    ────────────────────────────────────────────────────────────── */}
-<div className="flex items-center gap-2 md:gap-4">
-
-  {/* ---------- Language selector (desktop only) ---------- */}
-
- <AnnouncementPopup />
-  {/* ---------- Auth / User controls ---------- */}
-  {!isAuthenticated ? (
-    <>
-      <button
-        onClick={() => openAuthModal("login")}
-        className="bg-theme_color2 px-4 md:px-5 py-2 rounded-[5px] text-gray-800 text-sm md:text-base disabled:opacity-70"
-        disabled={isLoading.login}
-      >
-        {t.login}
-      </button>
-
-      {/* Register button – hidden on mobile */}
-      <button
-        onClick={() => openAuthModal("register")}
-        className="inline-block bg-theme_color2 px-5 py-2 rounded-[5px] text-gray-800 text-sm md:text-base disabled:opacity-70"
-        disabled={isLoading.register}
-      >
-        {t.register}
-      </button>
-    </>
-  ) : (
-    <>
-      {/* ---- Profile dropdown ---- */}
-      <div className="relative">
-        <button
-          onClick={toggleProfileDropdown}
-          className="hidden md:flex items-center gap-2 px-3 py-2 border border-gray-200 rounded-[5px] cursor-pointer"
-        >
-          <img
-            src={getProfileImage(userData?.username)}
-            alt="Profile"
-            className="w-7 h-7 rounded-full border-2 border-blue-500"
-          />
-          <span className="text-gray-700 font-medium text-sm">
-            {userData?.username || "User"}
-          </span>
-          <MdArrowDropDown
-            className={`text-lg text-gray-700 transition-transform ${
-              profileDropdownOpen ? "rotate-180" : ""
-            }`}
-          />
-        </button>
-
-        {profileDropdownOpen && (
-          <div className="absolute right-0 mt-2 w-64 bg-gray-50 rounded-lg shadow-xl z-50 border border-gray-200">
-            {/* Header */}
-            <div className="flex items-center gap-3 px-4 py-3 bg-gray-50 border-b border-gray-200">
-              <img
-                src={getProfileImage(userData?.username)}
-                alt="Profile"
-                className="w-10 h-10 rounded-full border-2 border-blue-500"
-              />
-              <div>
-                <p className="text-gray-700 font-medium">
-                  {userData?.username || "User"}
-                </p>
-                <p className="text-blue-400 text-sm">
-                  ৳ {userData?.balance?.toFixed(2) || "0.00"}
-                </p>
-              </div>
-            </div>
-
-            {/* Menu items */}
-            <ul className="py-1">
-              {profileMenuItems.map((item, idx) => (
-                <li key={idx}>
-                  <a
-                    href={item.path}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      item.onClick?.();
-                      setProfileDropdownOpen(false);
-                    }}
-                    className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors"
-                  >
-                    <span className="text-lg">{item.icon}</span>
-                    <span>{item.label}</span>
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-      </div>
-
-      {/* ---- Balance badge ---- */}
-      <div className="flex items-center gap-1 bg-gray-50 px-3 py-2 border border-gray-200 rounded-[5px] cursor-pointer">
-        <FaMoneyBillWave className="hidden md:inline text-yellow-400 text-sm" />
-        <span className="text-gray-700 text-xs md:text-sm font-semibold">
-          ৳ {userData?.balance?.toFixed(2) || "0.00"}
+<div className="flex items-center gap-3 md:gap-5">
+  
+  {/* --- The Balance Box (Matches the blue rounded rectangle) --- */}
+  <div className="flex flex-col gap-1.5 border border-[#BDE3F0] rounded-[15px] p-2 bg-transparent">
+    
+    {/* Top Row: Taka Symbol + Balance */}
+    <div className="flex items-center gap-2">
+           <FaBangladeshiTakaSign  className="text-[#BBB] text-[16px] ml-0.5" />
+      <div className="bg-white px-4  rounded-full border border-gray-100 w-[90px] md:w-[120px] text-center">
+        <span className="text-[#555] text-[12px] md:text-sm font-medium">
+          {userData?.balance?.toFixed(2) || "1000.00"}
         </span>
-        <FaSyncAlt className="text-gray-400 ml-1 text-sm cursor-pointer hover:text-blue-400 transition-colors" />
       </div>
+    </div>
+    
+    {/* Bottom Row: Banknote Icon + Bonus */}
+    <div className="flex items-center gap-2">
+      <FaMoneyBillAlt className="text-[#BBB] text-[16px] ml-0.5" />
+      <div className="bg-white px-4 rounded-full border border-gray-100 w-[90px] md:w-[120px] text-center">
+        <span className="text-[#555] text-[12px] md:text-sm font-medium">
+          {userData?.bonusBalance?.toFixed(2) || "100000.00"}
+        </span>
+      </div>
+    </div>
+  </div>
 
-      {/* ---- Deposit / Withdraw (desktop only) ---- */}
-      <button
-        onClick={handleDepositClick}
-        className="hidden md:inline-block bg-theme_color2 px-4 py-2 rounded-[5px] text-gray-700 text-sm"
-      >
-        {t.deposit}
-      </button>
-
-      <button
-        onClick={handleWithdrawClick}
-        className="hidden md:inline-block bg-theme_color2 px-4 py-2 rounded-[5px] text-gray-700 text-sm"
-      >
-        {t.withdraw}
-      </button>
-    </>
-  )}
+  {/* --- The Profile Icon (Matches the thin gray circle with blue user) --- */}
+  <div className="relative group">
+    <button
+      onClick={toggleProfileDropdown}
+      className="flex items-center justify-center w-11 h-11 md:w-14 md:h-14 rounded-full border-[1.5px] border-[#888] hover:border-cyan-400 transition-all bg-transparent"
+    >
+      {/* This icon matches the one in your image exactly */}
+      <FaUser className="text-[#89E3F5] text-2xl md:text-3xl" />
+    </button>
+    
+    {/* Profile Dropdown */}
+    {profileDropdownOpen && (
+      <div className="absolute right-0 top-full mt-3 w-64 bg-white rounded-lg shadow-xl z-[110] border border-gray-100 overflow-hidden">
+        <div className="px-4 py-4 bg-gray-50 border-b border-gray-100">
+          <p className="text-gray-800 font-bold truncate">
+            {userData?.username || "Guest User"}
+          </p>
+          <p className="text-cyan-600 text-xs font-medium">Account ID: {userData?._id?.slice(-6)}</p>
+        </div>
+        
+        <ul className="py-1">
+          {profileMenuItems.map((item, idx) => (
+            <li key={idx}>
+              <button
+                onClick={() => {
+                  item.onClick?.();
+                  setProfileDropdownOpen(false);
+                }}
+                className="w-full flex items-center gap-3 px-4 py-3 text-gray-600 hover:bg-cyan-50 transition-colors"
+              >
+                <span className="text-lg">{item.icon}</span>
+                <span className="text-sm">{item.label}</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      </div>
+    )}
+  </div>
 </div>
       </header>
       {sidebarOpen && (
@@ -1126,15 +1107,13 @@ useEffect(() => {
         />
       )}
     <div className={`fixed inset-0 z-[10000] transform transition-transform duration-300 ease-in-out ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} xl:hidden`}>
-  <div className="bg-[#98E1EE] h-full w-4/5 max-w-xs overflow-y-auto border-r border-gray-800 flex flex-col">
+  <div className="bg-[#98E1EE]/80 h-full w-4/5 max-w-xs overflow-y-auto border-r border-gray-800 flex flex-col">
     {/* Logo Section */}
-    <div className="p-4 flex items-center justify-between">
-      <div>
-        <img className='w-[100px]' src={logo} alt="Logo" />
-      </div>
+    <div className="p-4 py-[30px] flex items-center justify-between">
+      <div></div>
       <button
         onClick={closeSidebar}
-        className="text-gray-600 hover:text-gray-900 text-[22px] cursor-pointer transition-colors"
+        className="text-gray-600 hover:text-gray-900 text-[24px] cursor-pointer transition-colors"
       >
         <IoClose />
       </button>
@@ -1151,11 +1130,14 @@ useEffect(() => {
     </div>
 
     {/* Menu Items Section */}
-    <div className="grid grid-cols-1 gap-1 p-4">
+    <div className="grid grid-cols-1 gap-5 py-4 pr-[15px]">
       {renderMenuItems()}
-      
-      {/* Language Dropdown */}
-      <div className="relative mt-2">
+     
+    </div>
+     
+      <div className='h-full flex w-full justify-center py-[40px] items-end'>
+      <div className='w-full'>
+      <div className="relative w-full border-t-[1px] border-b-[1px] border-gray-200 mt-2 py-[5px] mb-[20px]">
         <button
           onClick={toggleDropdown}
           className="flex items-center w-full p-3 cursor-pointer text-gray-800"
@@ -1184,7 +1166,7 @@ useEffect(() => {
       </div>
 
       {/* Social Icons Section */}
-      <div className="pt-6 pb-6 mt-auto">
+      <div className="">
         <div className="flex gap-3 items-center justify-center">
           <a href="https://t.me/+CUD2OZlCEOAxMTg0" target="_blank" className="w-10 h-10 flex items-center justify-center rounded-full bg-[#24A1DE] text-white shadow-sm hover:scale-110 transition-transform"><FaTelegramPlane /></a>
           <a href="https://wa.me/61480897550" target="_blank" className="w-10 h-10 flex items-center justify-center rounded-full bg-[#4ADE80] text-white shadow-sm hover:scale-110 transition-transform"><FaWhatsapp /></a>
@@ -1193,14 +1175,15 @@ useEffect(() => {
           <a href="https://www.facebook.com/genzzzcasino" target="_blank" className="w-10 h-10 flex items-center justify-center rounded-full bg-[#1877F2] text-white shadow-sm hover:scale-110 transition-transform"><FaFacebookF /></a>
         </div>
       </div>
-    </div>
+      </div>
+      </div>
   </div>
 </div>
   {/* -----------------------------bottom-navbar------------------------------- */}
-<div className='w-full px-[10px] py-[5px] fixed bottom-0 left-1/2 -translate-x-1/2 z-50'>
+<div className='w-full  fixed bottom-0 left-1/2 -translate-x-1/2 z-50'>
   <nav className="w-full md:hidden">
     {/* Background changed to White with a soft shadow to match your top buttons */}
-    <div className="relative w-full h-16 bg-white rounded-[30px] shadow-[0_-5px_15px_rgba(0,0,0,0.1)] border border-white/50 backdrop-blur-sm">
+    <div className="relative w-full h-16 bg-gray-50 shadow-[0_-5px_15px_rgba(0,0,0,0.1)] border border-white/50 backdrop-blur-sm">
       <div className="flex justify-around items-center h-full">
         {/* Replace Home with Search button */}
         <button
@@ -1233,8 +1216,10 @@ useEffect(() => {
               <>
                 {isCenterItem(item) ? (
                   /* Center "Profile" Button - Enhanced Gradient */
-                  <div className="absolute -top-6 w-14 h-14 rounded-full flex items-center justify-center transition-all duration-300 transform shadow-[0_4px_15px_rgba(0,0,0,0.2)] bg-gradient-to-br from-[#06b6d4] to-[#0d9488] border-4 border-white">
-                    <span className='text-white text-[24px]'>{item.icon}</span>
+                  <div className="absolute -top-6 w-14 h-14 rounded-full flex p-[2px] items-center justify-center transition-all duration-300 transform shadow-[0_4px_15px_rgba(0,0,0,0.2)] bg-white border-[1px] border-theme_color2">
+                    <div className='w-full h-full border-[1px] rounded-full flex justify-center items-center border-theme_color2'>
+<span className='text-theme_color2 text-[24px]'>{item.icon}</span>
+                    </div>
                   </div>
                 ) : (
                   /* Regular Items */
