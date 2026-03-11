@@ -11,20 +11,28 @@ import {
   FaHistory,
   FaCoins,
   FaCheck,
-  FaCalendarAlt
+  FaCalendarAlt,
+  FaChevronRight
 } from 'react-icons/fa';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, NavLink } from 'react-router-dom';
 import { MdArrowBackIosNew } from "react-icons/md";
 import axios from 'axios';
 import { Toaster } from 'react-hot-toast';
-import Header from '../../components/header/Header';
-import Sidebar from '../../components/sidebar/Sidebar';
 import { LanguageContext } from '../../context/LanguageContext';
-import { GlobeAltIcon } from '@heroicons/react/24/solid';
+
+// --- Profile Images (same as Profile.jsx) ---
+import man from "../../assets/profileimages/man.png";
+import man1 from "../../assets/profileimages/man1.png";
+import bronze_img from "../../assets/level/badge.png";
+import silver_img from "../../assets/level/silver.png";
+import gold_img from "../../assets/level/medal.png";
+import diamond_img from "../../assets/level/diamond.png";
+import platinum_img from "../../assets/level/platinum.png";
+
+const profileImages = [man, man1];
 
 const Referral = () => {
   const { t, changeLanguage, language } = useContext(LanguageContext);
-  const [activeTab, setActiveTab] = useState('invite');
   const [copied, setCopied] = useState(false);
   const [referralData, setReferralData] = useState({
     referralCode: '',
@@ -39,30 +47,72 @@ const Referral = () => {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [showPopup, setShowPopup] = useState(false);
-  const [activeLeftTab, setActiveLeftTab] = useState(t.myAccount);
   const { userData } = useUser();
   const navigate = useNavigate();
   const API_BASE_URL = import.meta.env.VITE_API_KEY_Base_URL;
   const [feedback, setFeedback] = useState({ type: '', message: '', field: '' });
+  const [activeTab, setActiveTab] = useState('account');
 
   const referralLink = `${window.location.origin}/?refer_code=${userData?.referralCode || ''}`;
+
+  // --- Level logic (same as Profile) ---
+  const levels = [
+    { name: t.levelBronze || 'Bronze', threshold: 0, icon: bronze_img, color: '#cd7f32' },
+    { name: t.levelSilver || 'Silver', threshold: 10000, icon: silver_img, color: '#c0c0c0' },
+    { name: t.levelGold || 'Gold', threshold: 30000, icon: gold_img, color: '#ffd700' },
+    { name: t.levelPlatinum || 'Platinum', threshold: 100000, icon: platinum_img, color: '#00bcd4' },
+    { name: t.levelDiamond || 'Diamond', threshold: 500000, icon: diamond_img, color: '#a855f7' }
+  ];
+
+  const calculateLevelData = () => {
+    const lifetimeDeposit = userData?.lifetime_bet || 0;
+    let currentLevel = levels[0];
+    let nextLevel = null;
+    for (let i = levels.length - 1; i >= 0; i--) {
+      if (lifetimeDeposit >= levels[i].threshold) {
+        currentLevel = levels[i];
+        nextLevel = i < levels.length - 1 ? levels[i + 1] : null;
+        break;
+      }
+    }
+    let progressPercentage = 0;
+    if (nextLevel) {
+      const range = nextLevel.threshold - currentLevel.threshold;
+      const progress = lifetimeDeposit - currentLevel.threshold;
+      progressPercentage = Math.min(100, Math.round((progress / range) * 100));
+    } else {
+      progressPercentage = 100;
+    }
+    return { currentLevel, nextLevel, progressPercentage, lifetimeDeposit };
+  };
+  const levelData = calculateLevelData();
+
+  const getProfileImage = (username) => {
+    if (!username) return man;
+    let hash = 0;
+    for (let i = 0; i < username.length; i++) hash = username.charCodeAt(i) + ((hash << 5) - hash);
+    return profileImages[Math.abs(hash) % profileImages.length];
+  };
+
+  const formatBalance = (amount) => {
+    if (amount === undefined || amount === null) return language.code === 'bn' ? '০.০০' : '0.00';
+    return new Intl.NumberFormat(language.code === 'bn' ? 'bn-BD' : 'en-US', { minimumFractionDigits: 2 }).format(amount);
+  };
 
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
 
   useEffect(() => {
-    if (userData?._id && (activeTab === 'list' || activeTab === 'reward')) {
+    if (userData?._id) {
       fetchReferralData();
     }
-  }, [activeTab, userData]);
+  }, [userData]);
 
   const fetchReferralData = async () => {
     try {
       setLoading(true);
       setError(null);
-      
       const response = await axios.get(
         `${API_BASE_URL}/user/referred-users-details/${userData?._id}`,
         {
@@ -72,14 +122,12 @@ const Referral = () => {
           }
         }
       );
-      
       if (response.data.success) {
         setReferralData(response.data.data);
       } else {
         throw new Error(t.referralFetchError);
       }
     } catch (err) {
-      console.error('Error fetching referral data:', err);
       setError(err.response?.data?.message || err.message || t.referralFetchError);
     } finally {
       setLoading(false);
@@ -92,51 +140,10 @@ const Referral = () => {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const shareOnSocialMedia = (platform) => {
-    let url = '';
-    const text = `${t.referralShareText} ${referralLink}`;
-    
-    switch(platform) {
-      case 'facebook':
-        url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(referralLink)}`;
-        break;
-      case 'twitter':
-        url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
-        break;
-      case 'telegram':
-        url = `https://t.me/share/url?url=${encodeURIComponent(referralLink)}&text=${encodeURIComponent(text)}`;
-        break;
-      case 'whatsapp':
-        url = `https://wa.me/?text=${encodeURIComponent(text)}`;
-        break;
-      default:
-        return;
-    }
-    
-    window.open(url, '_blank', 'noopener,noreferrer');
-  };
-
-  const formatDate = (dateString) => {
-    if (!dateString) return t.na;
-    const date = new Date(dateString);
-    return date.toLocaleDateString(language.code === 'bn' ? 'bn-BD' : 'en-US', { 
-      year: 'numeric', 
-      month: 'short', 
-      day: 'numeric' 
-    });
-  };
-
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat(language.code === 'bn' ? 'bn-BD' : 'en-US', {
       minimumFractionDigits: 2
     }).format(amount || 0);
-  };
-
-  const formatMobileNumber = (number) => {
-    if (!number || number.length < 7) return number;
-    const firstPart = number.substring(0, 4);
-    const lastPart = number.substring(number.length - 3);
-    return `${firstPart}****${lastPart}`;
   };
 
   const transferToMainBalance = async () => {
@@ -151,17 +158,9 @@ const Referral = () => {
           }
         }
       );
-      
       if (response.data.success) {
-        setFeedback({
-          type: 'success',
-          message: t.referralTransferSuccess,
-          field: 'referralEarnings'
-        });
-        setReferralData(prevData => ({
-          ...prevData,
-          referralEarnings: 0
-        }));
+        setFeedback({ type: 'success', message: t.referralTransferSuccess, field: 'referralEarnings' });
+        setReferralData(prevData => ({ ...prevData, referralEarnings: 0 }));
       } else {
         throw new Error(t.referralTransferError);
       }
@@ -174,250 +173,211 @@ const Referral = () => {
     }
   };
 
-  const toggleLanguage = () => {
-    changeLanguage(
-      language.code === 'bn'
-        ? { code: 'en', name: 'English', flag: 'https://images.5849492029.com//TCG_PROD_IMAGES/COUNTRY_FLAG/CIRCLE/US.svg' }
-        : { code: 'bn', name: 'বাংলা', flag: 'https://images.5849492029.com//TCG_PROD_IMAGES/COUNTRY_FLAG/CIRCLE/BD.svg' }
-    );
-  };
-
   return (
-    <section className="min-h-screen font-anek pb-[90px] md:pb-0 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-gray-100">
-      
-      <div className="flex w-full">
-         <div className="w-full mx-auto">
-            {/* Header */}
-            <header className="bg-gray-800 border-b border-gray-700 py-3 px-3 mb-4">
-              <div className="flex items-center">
-                <button 
-                  onClick={() => navigate(-1)}
-                  className="mr-3 p-1 rounded-full text-cyan-500 hover:bg-gray-700 transition-colors"
-                >
-                  <MdArrowBackIosNew />
-                </button>
-                <h1 className="text-base font-bold text-gray-200">{t.referralProgramTitle}</h1>
-              </div>
-            </header>
+    <div className="min-h-screen font-anek pb-[90px] md:pb-0 bg-gray-100">
 
-             <div className='p-[10px]'>
-
-            {feedback.message && (
-              <div className={`mb-4 p-3 rounded ${feedback.type === 'success' ? 'bg-green-800 text-green-100' : 'bg-red-800 text-red-100'}`}>
-                {feedback.message}
-                <button 
-                  onClick={() => setFeedback({ type: '', message: '', field: '' })}
-                  className="float-right font-bold"
-                >
-                  <FaTimes />
-                </button>
-              </div>
-            )}
-            <div className="bg-gray-800 rounded-[5px] border border-gray-700 shadow-lg p-4 mb-4">
-              {/* Tab Navigation */}
-              <div className="flex gap-2 mb-4 text-white overflow-x-auto pb-2">
-                <button
-                  className={`px-3 py-1 rounded text-sm whitespace-nowrap flex items-center gap-1 ${
-                    activeTab === 'invite' ? 'bg-cyan-500 text-gray-900' : 'bg-gray-700'
-                  }`}
-                  onClick={() => setActiveTab('invite')}
-                >
-                  <FaUser size={12} /> {t.referralTabInvite}
-                </button>
-                <button
-                  className={`px-3 py-1 rounded text-sm whitespace-nowrap flex items-center gap-1 ${
-                    activeTab === 'list' ? 'bg-cyan-500 text-gray-900' : 'bg-gray-700'
-                  }`}
-                  onClick={() => setActiveTab('list')}
-                >
-                  <FaHistory size={12} /> {t.referralTabList}
-                </button>
-                <button
-                  className={`px-3 py-1 rounded text-sm whitespace-nowrap flex items-center gap-1 ${
-                    activeTab === 'reward' ? 'bg-cyan-500 text-gray-900' : 'bg-gray-700'
-                  }`}
-                  onClick={() => setActiveTab('reward')}
-                >
-                  <FaCoins size={12} /> {t.referralTabReward}
-                </button>
-              </div>
-
-              {/* Loading State */}
-              {loading && (
-                <div className="flex justify-center items-center h-64">
-                  <div className="relative">
-                    <div className="animate-spin rounded-full h-12 w-12 border-4 border-t-cyan-500 border-b-cyan-500 border-l-transparent border-r-transparent"></div>
-                    <div className="absolute inset-0 animate-pulse rounded-full h-12 w-12 bg-cyan-500/20 blur-sm"></div>
-                  </div>
-                </div>
-              )}
-
-              {/* Error State */}
-              {error && (
-                <div className="bg-red-900/50 border border-red-700 text-red-200 p-3 rounded mb-4 text-sm">
-                  {error}
-                </div>
-              )}
-
-              {/* Invite Tab Content */}
-              {!loading && activeTab === 'invite' && (
-                <div>
-                  <div className="mb-4 p-3 bg-gray-700 rounded-lg border border-gray-600">
-                    <h4 className="font-medium mb-2 text-cyan-400">{t.referralLinkTitle}</h4>
-                    <div className="flex items-center gap-1">
-                      <input
-                        type="text"
-                        className="flex-1 p-2 border border-gray-600 rounded bg-gray-800 text-white text-xs"
-                        value={referralLink}
-                        readOnly
-                      />
-                      <button 
-                        className="bg-cyan-500 hover:bg-cyan-600 text-gray-900 px-2 py-2 rounded flex items-center gap-1 text-xs"
-                        onClick={handleCopyLink}
-                      >
-                        <FaCopy className="text-xs" /> {copied ? t.referralCopied : t.referralCopy}
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="mb-4">
-                    <h4 className="font-medium mb-2 text-cyan-400">{t.referralShareSocial}</h4>
-                    <div className="flex gap-2">
-                      <button 
-                        className="bg-theme_color2 hover:bg-blue-700 text-white p-2 rounded-full transition-colors"
-                        onClick={() => shareOnSocialMedia('facebook')}
-                      >
-                        <FaFacebookF />
-                      </button>
-                      <button 
-                        className="bg-blue-400 hover:bg-blue-500 text-white p-2 rounded-full transition-colors"
-                        onClick={() => shareOnSocialMedia('twitter')}
-                      >
-                        <FaTwitter />
-                      </button>
-                      <button 
-                        className="bg-blue-500 hover:bg-theme_color2 text-white p-2 rounded-full transition-colors"
-                        onClick={() => shareOnSocialMedia('telegram')}
-                      >
-                        <FaTelegramPlane />
-                      </button>
-                      <button 
-                        className="bg-green-500 hover:bg-green-600 text-white p-2 rounded-full transition-colors"
-                        onClick={() => shareOnSocialMedia('whatsapp')}
-                      >
-                        <FaWhatsapp />
-                      </button>
-                    </div>
-                  </div>
-
-                </div>
-              )}
-
-              {/* Referred List Tab Content */}
-              {!loading && activeTab === 'list' && (
-                <div className="overflow-x-auto border text-white border-gray-600 rounded-lg">
-                  <table className="min-w-full">
-                    <thead className="bg-gray-700 text-white">
-                      <tr>
-                        <th className="py-2 px-3 text-left text-xs border-b border-gray-600">{t.referralTableUser}</th>
-                        <th className="py-2 px-3 text-left text-xs border-b border-gray-600">{t.referralTableDate}</th>
-                        <th className="py-2 px-3 text-left text-xs border-b border-gray-600">{t.referralTableReward}</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {referralData.referredUsers.length > 0 ? (
-                        referralData.referredUsers.map((user) => (
-                          <tr key={user.id} className="hover:bg-gray-700/50">
-                            <td className="py-2 px-3 border-b border-gray-600">
-                              <div className="flex items-center gap-2">
-                                <div className="w-6 h-6 rounded-full bg-gray-600 flex items-center justify-center">
-                                  <FaUser size={10} />
-                                </div>
-                                <div>
-                                  <p className="text-xs font-medium">{user.username}</p>
-                                  {user.phone && (
-                                    <p className="text-xxs text-gray-400">{formatMobileNumber(user.phone)}</p>
-                                  )}
-                                </div>
-                              </div>
-                            </td>
-                            <td className="py-2 px-3 border-b border-gray-600 text-xs">
-                              <div className="flex items-center gap-1">
-                                <FaCalendarAlt size={10} className="text-gray-400" />
-                                {formatDate(user.joinDate)}
-                              </div>
-                            </td>
-                            <td className="py-2 px-3 border-b border-gray-600 text-xs font-medium">
-                              {`৳${formatCurrency(user.earnedAmount)}` || '৳0.00'}
-                            </td>
-                          </tr>
-                        ))
-                      ) : (
-                        <tr>
-                          <td colSpan="3" className="py-6 text-center text-gray-500 text-xs">
-                            <div className="flex flex-col items-center justify-center">
-                              <FaUser className="text-gray-600 mb-2" size={20} />
-                              <p>{t.referralNoFriends}</p>
-                              <p className="mt-1">{t.referralInviteFriends}</p>
-                            </div>
-                          </td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-
-              {/* Reward Tab Content */}
-              {!loading && activeTab === 'reward' && (
-                <div>
-                  <div className="grid grid-cols-2 gap-3 mb-4">
-                    <div className="bg-gray-700 p-3 rounded shadow border border-gray-600">
-                      <p className="text-xs text-gray-400">{t.referralTotalInvites}</p>
-                      <p className="text-lg font-bold text-cyan-400">
-                        {referralData.totalReferrals}
-                      </p>
-                    </div>
-                    <div className="bg-gray-700 p-3 rounded shadow border border-gray-600">
-                      <p className="text-xs text-gray-400">{t.referralTotalEarnings}</p>
-                      <p className="text-lg font-bold text-cyan-400">
-                        ৳{formatCurrency(referralData.referralEarnings)}
-                      </p>
-                    </div>
-                  </div>
-                  
-                  <div className="bg-gray-700 p-3 rounded-lg border border-gray-600">
-                    {referralData.referralEarnings >= 1000 ? (
-                      <>
-                        <p className="text-xs text-gray-300 mb-1">{t.referralEligibleText}</p>
-                        <p className="text-xs text-gray-300 mb-1">{t.referralBonusText}: ৳{formatCurrency(referralData.referralEarnings)}</p>
-                        <p className="text-xs text-gray-300 mb-2">{t.referralCodeText}: {referralData.referralCode}</p>
-                        <button 
-                          className="w-full bg-cyan-500 hover:bg-cyan-600 text-gray-900 py-2 px-4 rounded text-sm font-medium"
-                          onClick={transferToMainBalance}
-                        >
-                          {t.referralTransferButton}
-                        </button>
-                      </>
-                    ) : (
-                      <>
-                        <p className="text-xs text-gray-300 mb-1">{t.referralCodeText}: {referralData.referralCode}</p>
-                        <p className="text-xs text-gray-300">{t.referralNotEligible}</p>
-                        <div className="mt-2 bg-gray-800 p-2 rounded border border-amber-500/30">
-                          <p className="text-xxs text-amber-400">{t.referralThresholdText}</p>
-                        </div>
-                      </>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-             </div>
-            
-          </div>
+      {/* Header */}
+      <div className="bg-[#1a1a2e] px-4 py-3 flex items-center justify-between sticky top-0 z-50">
+        <button
+          onClick={() => navigate(-1)}
+          className="bg-transparent border-none cursor-pointer text-white flex items-center"
+        >
+          <MdArrowBackIosNew className="text-xl" />
+        </button>
+        <h1 className="text-white font-bold text-lg m-0">Refferal Program</h1>
+        <div className="w-7" />
       </div>
+
+      <div className="pb-6 max-w-md mx-auto">
+
+        {/* Teal Hero Card — same as Profile */}
+        <div className="mx-3 mt-3 rounded-2xl p-5 relative overflow-hidden shadow-[0_4px_20px_rgba(0,188,212,0.3)] bg-[#00B4D8]">
+          {/* Level badge top right */}
+          <div className="absolute top-3 right-3 bg-white/20 rounded-full px-3 py-0.5 text-[11px] text-white font-semibold">
+            {levelData.currentLevel.name}
+          </div>
+          {/* Top row: Avatar + ID */}
+          <div className="flex items-center gap-3 mb-4">
+            <div className="relative flex-shrink-0">
+              <div className="w-16 h-16 rounded-full bg-white/30 flex items-center justify-center overflow-hidden border-2 border-white/50">
+                <img src={getProfileImage(userData?.username)} alt="Profile" className="w-full h-full object-cover" />
+              </div>
+            </div>
+            <div>
+              <div className="text-white/80 text-xs mb-0.5">Customer ID:</div>
+              <div className="text-white font-bold text-base tracking-wide">{userData?.player_id || '123456789'}</div>
+              <div className="text-white/70 text-[11px] mt-0.5">level {levelData.currentLevel.name}</div>
+            </div>
+          </div>
+          {/* Progress bar */}
+          <div className="mb-4">
+            <div className="h-1 bg-white/20 rounded-sm overflow-hidden">
+              <div
+                className="h-full bg-white/70 rounded-sm transition-all duration-500"
+                style={{ width: `${levelData.progressPercentage}%` }}
+              />
+            </div>
+          </div>
+          {/* Balance Row */}
+          <div className="grid grid-cols-3 gap-2">
+            <div className="text-center">
+              <div className="text-white/70 text-[10px] mb-0.5">Main Balance</div>
+              <div className="text-white font-bold text-sm">{formatBalance(userData?.balance)}</div>
+            </div>
+            <div className="text-center border-l border-r border-white/20">
+              <div className="text-white/70 text-[10px] mb-0.5">Bonus Balance</div>
+              <div className="text-white font-bold text-sm">{formatBalance(userData?.bonusBalance)}</div>
+            </div>
+            <div className="text-center">
+              <div className="text-white/70 text-[10px] mb-0.5">Refer Bonus</div>
+              <div className="text-white font-bold text-sm">{formatBalance(userData?.referralEarnings)}</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Tab Navigation — same style as Profile */}
+        <div className="flex gap-2 px-3 pb-3 pt-3 overflow-x-auto scrollbar-hide">
+          {[
+            { id: 'account', label: t.account || 'Account', path: '/profile' },
+            { id: 'transaction', label: t.transaction || 'Transaction', path: '/account-history' },
+            { id: 'bethistory', label: t.bettingHistory || 'Bet History', path: '/betting-history' },
+            { id: 'referral', label: t.referral || 'Referral P', path: null },
+          ].map((tab) => (
+            tab.path ? (
+              <NavLink
+                key={tab.id}
+                to={tab.path}
+                className="flex-shrink-0 px-4 py-1.5 rounded-[5px] text-xs font-semibold no-underline border border-gray-300 text-gray-100 bg-[#D0B1F9]"
+              >
+                {tab.label}
+              </NavLink>
+            ) : (
+              <button
+                key={tab.id}
+                className="flex-shrink-0 px-4 py-1.5 rounded-[5px] text-xs font-semibold border-none cursor-pointer bg-[#E46248] text-white"
+              >
+                {tab.label}
+              </button>
+            )
+          ))}
+        </div>
+
+        {/* Feedback */}
+        {feedback.message && (
+          <div className={`mx-3 mb-3 p-3 rounded ${feedback.type === 'success' ? 'bg-green-800 text-green-100' : 'bg-red-800 text-red-100'}`}>
+            {feedback.message}
+            <button onClick={() => setFeedback({ type: '', message: '', field: '' })} className="float-right font-bold">
+              <FaTimes />
+            </button>
+          </div>
+        )}
+
+        {/* My Refer Link Section */}
+        <div className="px-3 pb-2.5">
+          <div className="text-gray-500 text-xs font-semibold mb-2 pl-1">My Refer link</div>
+          <div className="bg-[#e8e0f0] p-[10px] rounded-xl">
+            <div className="bg-white rounded-xl px-4 py-3 flex items-center gap-2">
+              <input
+                type="text"
+                className="flex-1 text-xs text-gray-500 bg-transparent border-none outline-none truncate"
+                value={referralLink}
+                readOnly
+              />
+              <button
+                onClick={handleCopyLink}
+                className="flex-shrink-0 bg-[#00B4D8] hover:bg-cyan-500 text-white text-xs font-bold px-4 py-1.5 rounded-lg transition-colors"
+              >
+                {copied ? 'Copied!' : 'Copy'}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Refer And Earning Section */}
+        <div className="px-3 pb-2.5">
+          <div className="flex items-center justify-between mb-2 pl-1">
+            <div className="text-gray-500 text-xs font-semibold">Refer And Earning</div>
+            <div className="flex items-center gap-1 text-gray-500 text-xs">
+              <span>Total refer:{referralData.totalReferrals}</span>
+              <FaChevronRight className="text-[10px]" />
+            </div>
+          </div>
+
+          {/* Loading */}
+          {loading && (
+            <div className="flex justify-center items-center h-24">
+              <div className="animate-spin rounded-full h-8 w-8 border-4 border-t-cyan-500 border-b-cyan-500 border-l-transparent border-r-transparent" />
+            </div>
+          )}
+
+          {/* Error */}
+          {error && !loading && (
+            <div className="bg-red-100 text-red-600 p-3 rounded-xl text-xs mb-2">{error}</div>
+          )}
+
+          {/* Referred Users List */}
+          {!loading && (
+            <div className="bg-[#e8e0f0] p-[10px] rounded-xl">
+              <div className="bg-white rounded-xl overflow-hidden">
+                {referralData.referredUsers.length > 0 ? (
+                  referralData.referredUsers.map((user, i, arr) => (
+                    <div
+                      key={user.id || i}
+                      className={`flex items-center justify-between px-4 py-3 ${i < arr.length - 1 ? 'border-b border-[rgba(200,190,220,0.5)]' : ''}`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <div className="w-7 h-7 rounded-full bg-gray-200 flex items-center justify-center">
+                          <FaUser size={11} className="text-gray-400" />
+                        </div>
+                        <span className="text-sm text-gray-800 font-medium">{user.username || 'Customer ID'}</span>
+                      </div>
+                      <span className="text-sm text-gray-400 font-medium">{formatCurrency(user.earnedAmount)}</span>
+                    </div>
+                  ))
+                ) : (
+                  // Placeholder rows matching screenshot style
+                  [1,2,3,4,5].map((_, i, arr) => (
+                    <div
+                      key={i}
+                      className={`flex items-center justify-between px-4 py-3 ${i < arr.length - 1 ? 'border-b border-[rgba(200,190,220,0.5)]' : ''}`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <div className="w-7 h-7 rounded-full bg-gray-200 flex items-center justify-center">
+                          <FaUser size={11} className="text-gray-400" />
+                        </div>
+                        <span className="text-sm text-gray-500 font-medium">Customer ID</span>
+                      </div>
+                      <span className="text-sm text-gray-400">—</span>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Transfer to Main Balance (if eligible) */}
+        {!loading && referralData.referralEarnings >= 1000 && (
+          <div className="px-3 pb-2.5">
+            <div className="bg-[#e8e0f0] p-[10px] rounded-xl">
+              <div className="bg-white rounded-xl px-4 py-3">
+                <p className="text-xs text-gray-500 mb-1">{t.referralCodeText || 'Referral Code'}: <span className="font-bold text-gray-700">{referralData.referralCode}</span></p>
+                <p className="text-xs text-gray-500 mb-2">{t.referralBonusText || 'Bonus'}: ৳{formatCurrency(referralData.referralEarnings)}</p>
+                <button
+                  onClick={transferToMainBalance}
+                  className="w-full bg-[#00B4D8] hover:bg-cyan-500 text-white py-2 px-4 rounded-lg text-sm font-semibold transition-colors"
+                >
+                  {t.referralTransferButton || 'Transfer to Main Balance'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+      </div>
+
       <Toaster />
-    </section>
+    </div>
   );
 };
 

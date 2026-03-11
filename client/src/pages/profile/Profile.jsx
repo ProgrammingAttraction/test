@@ -129,7 +129,7 @@ const Profile = () => {
     );
 
     return (
-        <div className="bg-gray-100 min-h-screen font-sans">
+        <div className="bg-gray-100 min-h-screen font-anek">
 
             {/* Header */}
             <div className="bg-[#1a1a2e] px-4 py-3 flex items-center justify-between sticky top-0 z-50">

@@ -134,9 +134,7 @@ const Loader = () => {
         <Route exact path="/callback-payment" element={<CallbackPage />} />
 
         <Route exact path="/profile" element={
-          <ProtectedRoute>
             <Profile />
-          </ProtectedRoute>
         } />
         
         <Route exact path="/deposit" element={

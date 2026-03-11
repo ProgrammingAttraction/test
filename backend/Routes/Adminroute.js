@@ -11574,5 +11574,657 @@ admin_route.post("/auto-payment-method/toggle",async (req, res) => {
         });
     }
 });
+
+
+// ======================== HIGHLIGHT GAMES ROUTES ========================
+
+// Import the HighlightGames model at the top with your other imports
+const HighlightGames = require("../Models/HighlightGamesModel");
+
+// @route   POST /api/admin/highlight-games
+// @desc    Create a new highlight game
+admin_route.post("/highlight-games", ensureadminAuthenticated, async (req, res) => {
+  try {
+    const { name, provider, gameId, status, imageUrl, categories, isFeatured, displayOrder } = req.body;
+
+    // Validate required fields
+    if (!name || !provider || !gameId || !imageUrl) {
+      return res.status(400).json({
+        success: false,
+        message: "Name, provider, gameId, and imageUrl are required",
+      });
+    }
+
+    // Check if game with this gameId already exists
+    const existingGame = await HighlightGames.findOne({ gameId });
+    if (existingGame) {
+      return res.status(409).json({
+        success: false,
+        message: "Game with this ID already exists in highlights",
+      });
+    }
+
+    // Create new highlight game
+    const newHighlightGame = new HighlightGames({
+      name,
+      provider,
+      gameId,
+      status: status || "active",
+      imageUrl,
+      categories: categories || [],
+      isFeatured: isFeatured || false,
+      displayOrder: displayOrder || 0,
+    });
+
+    await newHighlightGame.save();
+
+    res.status(201).json({
+      success: true,
+      message: "Highlight game created successfully",
+      data: newHighlightGame,
+    });
+  } catch (error) {
+    console.error("Error creating highlight game:", error);
+    
+    if (error.code === 11000) {
+      return res.status(409).json({
+        success: false,
+        message: "Game with this ID already exists in highlights",
+      });
+    }
+
+    res.status(500).json({
+      success: false,
+      message: "Failed to create highlight game",
+      error: error.message,
+    });
+  }
+});
+
+// @route   GET /api/admin/highlight-games
+// @desc    Get all highlight games with filtering and pagination
+admin_route.get("/highlight-games", async (req, res) => {
+  try {
+    const {
+      page = 1,
+      limit = 20,
+      status,
+      provider,
+      search,
+      isFeatured,
+      sortBy = "displayOrder",
+      sortOrder = "asc",
+    } = req.query;
+
+    // Build filter query
+    const filter = {};
+
+    if (status && status !== "all") {
+      filter.status = status;
+    }
+
+    if (provider && provider !== "all") {
+      filter.provider = provider;
+    }
+
+    if (isFeatured !== undefined && isFeatured !== "all") {
+      filter.isFeatured = isFeatured === "true";
+    }
+
+    if (search) {
+      filter.$or = [
+        { name: { $regex: search, $options: "i" } },
+        { provider: { $regex: search, $options: "i" } },
+        { gameId: { $regex: search, $options: "i" } },
+      ];
+    }
+
+    // Calculate skip for pagination
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+
+    // Sort configuration
+    const sort = {};
+    sort[sortBy] = sortOrder === "desc" ? -1 : 1;
+
+    // Get highlight games with pagination
+    const highlightGames = await HighlightGames.find(filter)
+      .sort(sort)
+      .skip(skip)
+      .limit(parseInt(limit));
+
+    // Get total count
+    const total = await HighlightGames.countDocuments(filter);
+
+    // Get unique providers for filter options
+    const providers = await HighlightGames.distinct("provider");
+
+    res.status(200).json({
+      success: true,
+      data: highlightGames,
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total,
+        pages: Math.ceil(total / parseInt(limit)),
+      },
+      filters: {
+        providers: providers.sort(),
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching highlight games:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch highlight games",
+      error: error.message,
+    });
+  }
+});
+
+// @route   GET /api/admin/highlight-games/:id
+// @desc    Get a single highlight game by ID
+admin_route.get("/highlight-games/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const highlightGame = await HighlightGames.findById(id);
+
+    if (!highlightGame) {
+      return res.status(404).json({
+        success: false,
+        message: "Highlight game not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: highlightGame,
+    });
+  } catch (error) {
+    console.error("Error fetching highlight game:", error);
+
+    if (error.name === "CastError") {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid game ID format",
+      });
+    }
+
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch highlight game",
+      error: error.message,
+    });
+  }
+});
+
+// @route   PUT /api/admin/highlight-games/:id
+// @desc    Update a highlight game
+admin_route.put("/highlight-games/:id", ensureadminAuthenticated, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, provider, gameId, status, imageUrl, categories, isFeatured, displayOrder } = req.body;
+
+    // Find the existing game
+    const highlightGame = await HighlightGames.findById(id);
+
+    if (!highlightGame) {
+      return res.status(404).json({
+        success: false,
+        message: "Highlight game not found",
+      });
+    }
+
+    // Check if gameId is being updated and if it conflicts with another game
+    if (gameId && gameId !== highlightGame.gameId) {
+      const existingGame = await HighlightGames.findOne({ gameId });
+      if (existingGame) {
+        return res.status(409).json({
+          success: false,
+          message: "Another game already uses this Game ID in highlights",
+        });
+      }
+    }
+
+    // Update fields
+    if (name !== undefined) highlightGame.name = name;
+    if (provider !== undefined) highlightGame.provider = provider;
+    if (gameId !== undefined) highlightGame.gameId = gameId;
+    if (status !== undefined) highlightGame.status = status;
+    if (imageUrl !== undefined) highlightGame.imageUrl = imageUrl;
+    if (categories !== undefined) highlightGame.categories = categories;
+    if (isFeatured !== undefined) highlightGame.isFeatured = isFeatured;
+    if (displayOrder !== undefined) highlightGame.displayOrder = displayOrder;
+
+    highlightGame.updatedAt = Date.now();
+
+    await highlightGame.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Highlight game updated successfully",
+      data: highlightGame,
+    });
+  } catch (error) {
+    console.error("Error updating highlight game:", error);
+
+    if (error.code === 11000) {
+      return res.status(409).json({
+        success: false,
+        message: "Another game already uses this Game ID in highlights",
+      });
+    }
+
+    if (error.name === "CastError") {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid game ID format",
+      });
+    }
+
+    res.status(500).json({
+      success: false,
+      message: "Failed to update highlight game",
+      error: error.message,
+    });
+  }
+});
+
+// @route   DELETE /api/admin/highlight-games/:id
+// @desc    Delete a highlight game
+admin_route.delete("/highlight-games/:id", ensureadminAuthenticated, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const deletedGame = await HighlightGames.findByIdAndDelete(id);
+
+    if (!deletedGame) {
+      return res.status(404).json({
+        success: false,
+        message: "Highlight game not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Highlight game deleted successfully",
+      data: {
+        id: deletedGame._id,
+        name: deletedGame.name,
+        gameId: deletedGame.gameId,
+      },
+    });
+  } catch (error) {
+    console.error("Error deleting highlight game:", error);
+
+    if (error.name === "CastError") {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid game ID format",
+      });
+    }
+
+    res.status(500).json({
+      success: false,
+      message: "Failed to delete highlight game",
+      error: error.message,
+    });
+  }
+});
+
+// @route   PUT /api/admin/highlight-games/:id/status
+// @desc    Toggle highlight game active status
+admin_route.put("/highlight-games/:id/status", ensureadminAuthenticated, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    if (!status || !["active", "inactive"].includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: "Status must be either 'active' or 'inactive'",
+      });
+    }
+
+    const highlightGame = await HighlightGames.findByIdAndUpdate(
+      id,
+      {
+        status,
+        updatedAt: Date.now(),
+      },
+      { new: true }
+    );
+
+    if (!highlightGame) {
+      return res.status(404).json({
+        success: false,
+        message: "Highlight game not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: `Game ${status === "active" ? "activated" : "deactivated"} successfully`,
+      data: highlightGame,
+    });
+  } catch (error) {
+    console.error("Error updating highlight game status:", error);
+
+    if (error.name === "CastError") {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid game ID format",
+      });
+    }
+
+    res.status(500).json({
+      success: false,
+      message: "Failed to update game status",
+      error: error.message,
+    });
+  }
+});
+
+// @route   PUT /api/admin/highlight-games/:id/feature
+// @desc    Toggle highlight game featured status
+admin_route.put("/highlight-games/:id/feature", ensureadminAuthenticated, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { isFeatured } = req.body;
+
+    if (typeof isFeatured !== "boolean") {
+      return res.status(400).json({
+        success: false,
+        message: "isFeatured must be a boolean",
+      });
+    }
+
+    const highlightGame = await HighlightGames.findByIdAndUpdate(
+      id,
+      {
+        isFeatured,
+        updatedAt: Date.now(),
+      },
+      { new: true }
+    );
+
+    if (!highlightGame) {
+      return res.status(404).json({
+        success: false,
+        message: "Highlight game not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: `Game ${isFeatured ? "marked as featured" : "removed from featured"} successfully`,
+      data: highlightGame,
+    });
+  } catch (error) {
+    console.error("Error updating highlight game featured status:", error);
+
+    if (error.name === "CastError") {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid game ID format",
+      });
+    }
+
+    res.status(500).json({
+      success: false,
+      message: "Failed to update featured status",
+      error: error.message,
+    });
+  }
+});
+
+// @route   POST /api/admin/highlight-games/bulk-upload
+// @desc    Bulk upload highlight games from array
+admin_route.post("/highlight-games/bulk-upload", ensureadminAuthenticated, async (req, res) => {
+  try {
+    const { games } = req.body;
+
+    if (!games || !Array.isArray(games) || games.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Games array is required",
+      });
+    }
+
+    const results = {
+      total: games.length,
+      added: 0,
+      skipped: 0,
+      errors: 0,
+      details: [],
+    };
+
+    // Get existing gameIds
+    const gameIds = games.map((g) => g.gameId).filter((id) => id);
+    const existingGames = await HighlightGames.find({
+      gameId: { $in: gameIds },
+    }).select("gameId");
+
+    const existingGameIdSet = new Set(existingGames.map((g) => g.gameId));
+
+    // Process games in batches
+    const batchSize = 10;
+    const validGames = [];
+
+    for (const [index, game] of games.entries()) {
+      const gameId = game.gameId ? game.gameId.trim() : "";
+
+      // Validate required fields
+      if (!gameId || !game.name || !game.provider || !game.imageUrl) {
+        results.errors++;
+        results.details.push({
+          gameId: gameId || "unknown",
+          status: "error",
+          reason: "Missing required fields (name, provider, gameId, imageUrl are required)",
+          row: index + 2,
+        });
+        continue;
+      }
+
+      // Check if game already exists
+      if (existingGameIdSet.has(gameId)) {
+        results.skipped++;
+        results.details.push({
+          gameId: gameId,
+          status: "skipped",
+          reason: "Game ID already exists in highlight games",
+          row: index + 2,
+        });
+        continue;
+      }
+
+      validGames.push({
+        originalIndex: index,
+        game: {
+          name: game.name.trim(),
+          provider: game.provider.trim(),
+          gameId: gameId,
+          imageUrl: game.imageUrl.trim(),
+          status: game.status || "active",
+          categories: game.categories || [],
+          isFeatured: game.isFeatured || false,
+          displayOrder: game.displayOrder || 0,
+        },
+      });
+    }
+
+    // Insert valid games in batches
+    for (let i = 0; i < validGames.length; i += batchSize) {
+      const batch = validGames.slice(i, i + batchSize);
+
+      const batchPromises = batch.map(async ({ originalIndex, game }) => {
+        try {
+          const newGame = new HighlightGames(game);
+          await newGame.save();
+
+          return {
+            success: true,
+            gameId: game.gameId,
+            message: "Game added successfully",
+            row: originalIndex + 2,
+          };
+        } catch (error) {
+          console.error(`Error adding game ${game.gameId}:`, error);
+
+          if (error.code === 11000) {
+            return {
+              success: false,
+              gameId: game.gameId,
+              message: "Duplicate game ID",
+              row: originalIndex + 2,
+            };
+          }
+
+          return {
+            success: false,
+            gameId: game.gameId,
+            message: `Database error: ${error.message}`,
+            row: originalIndex + 2,
+          };
+        }
+      });
+
+      const batchResults = await Promise.all(batchPromises);
+
+      batchResults.forEach((result) => {
+        if (result.success) {
+          results.added++;
+          results.details.push({
+            gameId: result.gameId,
+            status: "added",
+            row: result.row,
+          });
+        } else {
+          results.errors++;
+          results.details.push({
+            gameId: result.gameId,
+            status: "error",
+            reason: result.message,
+            row: result.row,
+          });
+        }
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Bulk upload completed",
+      results,
+    });
+  } catch (error) {
+    console.error("Error in bulk upload:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to process bulk upload",
+      error: error.message,
+    });
+  }
+});
+
+// @route   POST /api/admin/highlight-games/reorder
+// @desc    Reorder highlight games (update displayOrder in batch)
+admin_route.post("/highlight-games/reorder", ensureadminAuthenticated, async (req, res) => {
+  try {
+    const { games } = req.body;
+
+    if (!games || !Array.isArray(games)) {
+      return res.status(400).json({
+        success: false,
+        message: "Games array is required",
+      });
+    }
+
+    const updatePromises = games.map(({ id, displayOrder }) =>
+      HighlightGames.findByIdAndUpdate(
+        id,
+        { displayOrder, updatedAt: Date.now() },
+        { new: true }
+      )
+    );
+
+    const updatedGames = await Promise.all(updatePromises);
+
+    res.status(200).json({
+      success: true,
+      message: "Highlight games reordered successfully",
+      data: updatedGames.filter((g) => g !== null),
+    });
+  } catch (error) {
+    console.error("Error reordering highlight games:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to reorder highlight games",
+      error: error.message,
+    });
+  }
+});
+
+// @route   GET /api/admin/highlight-games/stats
+// @desc    Get statistics about highlight games
+admin_route.get("/highlight-games/stats", ensureadminAuthenticated, async (req, res) => {
+  try {
+    const [totalGames, activeGames, featuredGames, providers] = await Promise.all([
+      HighlightGames.countDocuments(),
+      HighlightGames.countDocuments({ status: "active" }),
+      HighlightGames.countDocuments({ isFeatured: true }),
+      HighlightGames.distinct("provider"),
+    ]);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        totalGames,
+        activeGames,
+        inactiveGames: totalGames - activeGames,
+        featuredGames,
+        nonFeaturedGames: totalGames - featuredGames,
+        uniqueProviders: providers.length,
+        providers: providers.sort(),
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching highlight games stats:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch statistics",
+      error: error.message,
+    });
+  }
+});
+
+// @route   DELETE /api/admin/highlight-games
+// @desc    Delete all highlight games (use with caution)
+admin_route.delete("/highlight-games", ensureadminAuthenticated, async (req, res) => {
+  try {
+    const { confirm } = req.query;
+
+    if (confirm !== "true") {
+      return res.status(400).json({
+        success: false,
+        message: "Please confirm with ?confirm=true to delete all highlight games",
+      });
+    }
+
+    const result = await HighlightGames.deleteMany({});
+
+    res.status(200).json({
+      success: true,
+      message: `Successfully deleted ${result.deletedCount} highlight games`,
+      deletedCount: result.deletedCount,
+    });
+  } catch (error) {
+    console.error("Error deleting all highlight games:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to delete all highlight games",
+      error: error.message,
+    });
+  }
+});
 module.exports=admin_route;
 // ==================== ENHANCED BONUS MANAGEMENT ROUTES ====================

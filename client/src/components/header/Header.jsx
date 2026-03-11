@@ -70,6 +70,19 @@ import MobileAppBanner from './MobileAppBanner';
 import SearchPopup from '../SearchPopup/SearchPopup'; // Import SearchPopup
 
 import { GiHamburgerMenu } from "react-icons/gi";
+// ------------------------sidebar-images----------------------
+import sideicon1 from "../../assets/sidebar_icon/img1.svg"
+import sideicon2 from "../../assets/sidebar_icon/img2.svg"
+import sideicon3 from "../../assets/sidebar_icon/img3.svg"
+import sideicon4 from "../../assets/sidebar_icon/img4.svg"
+import sideicon5 from "../../assets/sidebar_icon/img5.svg"
+
+// -------------------bottom-navbar-----------------------
+import menu1 from "../../assets/bottom_navbar/menu1.png"
+import menu2 from "../../assets/bottom_navbar/menu2.png"
+import menu3 from "../../assets/bottom_navbar/menu3.png"
+import menu4 from "../../assets/bottom_navbar/menu4.png"
+
 
 const Header = ({ setShowPopup, setActiveLeftTab, showPopup, activeLeftTab }) => {
   const { userData, loading, error, fetchUserData } = useUser();
@@ -271,7 +284,7 @@ const navItems = [
     id: 'casino', 
     label: 'Casino', 
     path: '/casino-games', 
-    icon: <FaCoins className="w-5 h-5" />, 
+    icon: menu1, 
     activeIcon: <FaCoins className="w-5 h-5 text-yellow-400" />, 
     requiresAuth: true 
   },
@@ -279,7 +292,7 @@ const navItems = [
     id: 'profile', 
     label: 'Deposit', 
     path: '/deposit', 
-    icon: <PiMoneyWavy className="w-7 h-7" />, 
+    icon: menu3, 
     activeIcon: <FaUser className="w-7 h-7 text-blue-400" />, 
     requiresAuth: true 
   },
@@ -287,7 +300,7 @@ const navItems = [
     id: 'sports', 
     label: 'Sports', 
     path: '/sports', 
-    icon: <GiSoccerBall className="w-5 h-5" />, 
+    icon: menu2, 
     activeIcon: <GiSoccerBall className="w-5 h-5 text-green-400" />, 
     requiresAuth: true 
   },
@@ -295,7 +308,7 @@ const navItems = [
     id: 'livechat', 
     label: 'Live Chat', 
     path: '/live-chat', 
-    icon: <FiMessageCircle className="w-5 h-5" />, 
+    icon:menu4, 
     activeIcon: <FiMessageCircle className="w-5 h-5 text-purple-400" />, 
     requiresAuth: false 
   }
@@ -708,11 +721,11 @@ const handleRegister = async () => {
   };
 
 const menuItems = [
-  { icon: <FaFire />, label: t.popular, path: '/popular-game' },
-  { icon: <FaUserCircle />, label: t.myAccount, path: '/profile' },
-  { icon: <FaBuilding />, label: t.provider, path: '/provider' },
-  { icon: <FaHandshake />, label: t.affiliate, path: '/affiliate-programme' },
-  { icon: <FaCrown />, label: t.vipClub, path: '/vip-club' },
+  { icon: sideicon5, label: t.popular, path: '/popular-game' },
+  { icon: sideicon3, label: t.myAccount, path: '/profile' },
+  { icon:sideicon2, label: t.provider, path: '/provider' },
+  { icon:sideicon4, label: t.affiliate, path: '/affiliate-programme' },
+  { icon:sideicon1, label: t.vipClub, path: '/vip-club' },
 ];
   // Update the menu items rendering in the sidebar
   const renderMenuItems = () => {
@@ -730,7 +743,7 @@ const menuItems = [
         }}
         className="flex items-center bg-white rounded-r-[25px] gap-4 px-3  py-2 text-gray-800 cursor-pointer transition-colors"
       >
-        <span className='text-[20px]'>{item.icon}</span>
+        <img src={item.icon} className='text-[20px]'/>
         <span className=" font-[500]">{item.label}</span>
       </NavLink>
     ));
@@ -1034,8 +1047,29 @@ useEffect(() => {
    Right side of the header (Authenticated State - Match Image)
    ────────────────────────────────────────────────────────────── */}
 <div className="flex items-center gap-3 md:gap-5">
-  
-  {/* --- The Balance Box (Matches the blue rounded rectangle) --- */}
+    {!isAuthenticated ? (
+    <>
+      <button
+        onClick={() => openAuthModal("login")}
+        className="bg-theme_color2 px-4 md:px-5 py-2 rounded-[5px] text-gray-800 text-sm md:text-base disabled:opacity-70"
+        disabled={isLoading.login}
+      >
+        {t.login}
+      </button>
+
+      {/* Register button – hidden on mobile */}
+      <button
+        onClick={() => openAuthModal("register")}
+        className=" bg-theme_color2 px-5 py-2 rounded-[5px] text-gray-800 text-sm md:text-base disabled:opacity-70"
+        disabled={isLoading.register}
+      >
+        {t.register}
+      </button>
+    </>
+  ) : (
+    <>
+      {/* ---- Profile dropdown ---- */}
+    {/* --- The Balance Box (Matches the blue rounded rectangle) --- */}
   <div className="flex flex-col gap-1.5 border border-[#BDE3F0] rounded-[15px] p-2 bg-transparent">
     
     {/* Top Row: Taka Symbol + Balance */}
@@ -1098,6 +1132,9 @@ useEffect(() => {
       </div>
     )}
   </div>
+    </>
+  )}
+ 
 </div>
       </header>
       {sidebarOpen && (
@@ -1110,7 +1147,9 @@ useEffect(() => {
   <div className="bg-[#98E1EE]/80 h-full w-4/5 max-w-xs overflow-y-auto border-r border-gray-800 flex flex-col">
     {/* Logo Section */}
     <div className="p-4 py-[30px] flex items-center justify-between">
-      <div></div>
+      <div>
+        <img className='w-[100px]' src={logo} alt="" />
+      </div>
       <button
         onClick={closeSidebar}
         className="text-gray-600 hover:text-gray-900 text-[24px] cursor-pointer transition-colors"
@@ -1217,15 +1256,13 @@ useEffect(() => {
                 {isCenterItem(item) ? (
                   /* Center "Profile" Button - Enhanced Gradient */
                   <div className="absolute -top-6 w-14 h-14 rounded-full flex p-[2px] items-center justify-center transition-all duration-300 transform shadow-[0_4px_15px_rgba(0,0,0,0.2)] bg-white border-[1px] border-theme_color2">
-                    <div className='w-full h-full border-[1px] rounded-full flex justify-center items-center border-theme_color2'>
-<span className='text-theme_color2 text-[24px]'>{item.icon}</span>
-                    </div>
+                            <img src={item.icon} alt="" />
                   </div>
                 ) : (
                   /* Regular Items */
                   <>
                     <div className={`text-2xl transition-transform duration-300 ${isActive ? 'scale-110' : 'scale-100'}`}>
-                      {isActive ? item.activeIcon : item.icon}
+                    <img src={item.icon} alt="" />
                     </div>
                     
                     <span className={`text-[10px] font-bold uppercase tracking-wide mt-1 transition-colors duration-300`}>
