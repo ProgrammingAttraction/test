@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { MdArrowBackIosNew } from "react-icons/md";
-import { TiWarningOutline } from "react-icons/ti";
+import { MdArrowBackIosNew, MdClose } from "react-icons/md";
 import { useUser } from "../../context/UserContext";
 import { LanguageContext } from '../../context/LanguageContext';
 
@@ -15,156 +14,134 @@ const Deposit = () => {
   const { userData, loading, error, fetchUserData } = useUser();
   const base_url = import.meta.env.VITE_API_KEY_Base_URL;
   const base_url2 = import.meta.env.VITE_API_KEY_Base_URL2;
-  const frontend_url=import.meta.env.VITE_API_KEY_Frotend_URL;
-  const amounts = [300, 500, 700, 1000, 3000, 5000, 10000, 20000, 25000, 30000];
+  const frontend_url = import.meta.env.VITE_API_KEY_Frotend_URL;
+  const amounts = [500, 800, 1500, 2000, 5000];
   const [availableBonuses, setAvailableBonuses] = useState([]);
   const [bonusLoading, setBonusLoading] = useState(false);
   const [selectedBonus, setSelectedBonus] = useState(null);
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
-  
-  // State for auto payment status
   const [autoPaymentStatus, setAutoPaymentStatus] = useState(false);
   const [autoPaymentLoading, setAutoPaymentLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('deposit');
 
-  // Check if user has mobile number
-  const hasMobileNumber = userData?.phone;
-
-  // Calculate account age and remaining bonus time
-  const accountAgeInDays = userData?.createdAt 
+  const accountAgeInDays = userData?.createdAt
     ? Math.floor((new Date() - new Date(userData.createdAt)) / (1000 * 60 * 60 * 24))
     : 0;
-  const bonusEndTime = userData?.createdAt 
+  const bonusEndTime = userData?.createdAt
     ? new Date(new Date(userData.createdAt).getTime() + 3 * 24 * 60 * 60 * 1000)
     : new Date();
 
-  // State for countdown timer
-  const [timeRemaining, setTimeRemaining] = useState({
-    days: 0,
-    hours: 0,
-    minutes: 0,
-    seconds: 0,
-  });
+  const [timeRemaining, setTimeRemaining] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
 
-  // Format number based on language
   const formatNumber = (number) => {
     if (number === undefined || number === null) return language.code === 'bn' ? '০' : '0';
     return new Intl.NumberFormat(language.code === 'bn' ? 'bn-BD' : 'en-US').format(number);
   };
 
-  // Update countdown every second
   useEffect(() => {
     const updateCountdown = () => {
       const timeRemainingMs = bonusEndTime - new Date();
-      if (timeRemainingMs <= 0) {
-        setTimeRemaining({ days: 0, hours: 0, minutes: 0, seconds: 0 });
-        return;
-      }
-      const days = Math.floor(timeRemainingMs / (1000 * 60 * 60 * 24));
-      const hours = Math.floor((timeRemainingMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-      const minutes = Math.floor((timeRemainingMs % (1000 * 60 * 60)) / (1000 * 60));
-      const seconds = Math.floor((timeRemainingMs % (1000 * 60)) / 1000);
-      setTimeRemaining({ days, hours, minutes, seconds });
+      if (timeRemainingMs <= 0) { setTimeRemaining({ days: 0, hours: 0, minutes: 0, seconds: 0 }); return; }
+      setTimeRemaining({
+        days: Math.floor(timeRemainingMs / (1000 * 60 * 60 * 24)),
+        hours: Math.floor((timeRemainingMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+        minutes: Math.floor((timeRemainingMs % (1000 * 60 * 60)) / (1000 * 60)),
+        seconds: Math.floor((timeRemainingMs % (1000 * 60)) / 1000),
+      });
     };
+    updateCountdown();
+    const id = setInterval(updateCountdown, 1000);
+    return () => clearInterval(id);
+  }, []);
 
-    updateCountdown(); // Initial call
-    const intervalId = setInterval(updateCountdown, 1000); // Update every second
-
-    return () => clearInterval(intervalId); // Cleanup interval on component unmount
-  }, [bonusEndTime]);
-
-  // Fetch auto payment status
   useEffect(() => {
     const fetchAutoPaymentStatus = async () => {
       try {
         const token = localStorage.getItem("token");
         const response = await axios.get(`${base_url}/user/auto-payment-status`, {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
+          headers: { Authorization: `Bearer ${token}` }
         });
-        
-        if (response.data.success) {
-          setAutoPaymentStatus(response.data.status);
-        }
+        if (response.data.success) setAutoPaymentStatus(response.data.status);
       } catch (err) {
-        console.error("Error fetching auto payment status:", err);
-        setAutoPaymentStatus(false); // Default to false on error
+        setAutoPaymentStatus(false);
       } finally {
         setAutoPaymentLoading(false);
       }
     };
-
     fetchAutoPaymentStatus();
-  }, [base_url]);
+  }, []);
 
-  // Check if user is eligible for bonuses
-  const isNewUser = accountAgeInDays < 3;
-  const firstDepositBonusAvailable = isNewUser && userData?.bonusInfo?.firstDepositBonusClaimed === false;
-  const depositBonusAvailable = isNewUser && (userData?.total_deposit === 0 || 
-    (userData?.bonusInfo?.activeBonuses?.length === 0));
+  useEffect(() => {
+    const fetchAvailableBonuses = async () => {
+      try {
+        setBonusLoading(true);
+        const user = JSON.parse(localStorage.getItem("user"));
+        const token = localStorage.getItem("token");
+        if (!user || !user._id) return;
+        const response = await axios.get(`${base_url}/user/bonuses/available`, {
+          headers: { Authorization: `Bearer ${token}` },
+          params: { userid: user._id }
+        });
+        if (response.data) setAvailableBonuses(response.data.data);
+      } catch (err) {
+        console.error("Error fetching bonuses:", err);
+      } finally {
+        setBonusLoading(false);
+      }
+    };
+    fetchAvailableBonuses();
+  }, []);
 
-  // Check if any bonus is available and no bonus has been claimed
-  const showBonusSection = (firstDepositBonusAvailable || depositBonusAvailable) && 
-    !userData?.bonusInfo?.firstDepositBonusClaimed && 
-    (!userData?.bonusInfo?.activeBonuses || userData.bonusInfo.activeBonuses.length === 0);
+  useEffect(() => {
+    const checkPaymentStatus = async () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const paymentId = urlParams.get('paymentId');
+      const status = urlParams.get('status');
+      if (paymentId && status) {
+        try {
+          const response = await axios.get(`${base_url}/api/deposit/status?paymentId=${paymentId}`);
+          if (response.data.success) { setSuccessMessage(t.depositSuccess); fetchUserData(); }
+          else setErrorMessage(t.depositFailedOrProcessing);
+        } catch (error) {
+          setErrorMessage(t.paymentStatusCheckError);
+        }
+      }
+    };
+    checkPaymentStatus();
+  }, []);
 
-const handleDeposit = async () => {
-    // Reset messages
+  useEffect(() => { window.scrollTo(0, 0); }, []);
+
+  const calculateBonusAmount = (bonus) => {
+    if (!amount || isNaN(parseFloat(amount))) return 0;
+    const amountNum = parseFloat(amount);
+    let calculatedBonus = 0;
+    if (bonus.percentage > 0) {
+      calculatedBonus = (amountNum * bonus.percentage) / 100;
+      if (bonus.maxBonus && calculatedBonus > bonus.maxBonus) calculatedBonus = bonus.maxBonus;
+    } else if (bonus.amount > 0) {
+      calculatedBonus = bonus.amount;
+    }
+    return calculatedBonus;
+  };
+
+  const handleDeposit = async () => {
     setErrorMessage('');
     setSuccessMessage('');
-
-    // Validate inputs
-    if (!amount) {
-      setErrorMessage(t.enterAmountError);
-      return;
-    }
-
+    if (!amount) { setErrorMessage(t.enterAmountError); return; }
     const amountNum = parseFloat(amount);
-    if (isNaN(amountNum)) {
-      setErrorMessage(t.invalidAmountError);
-      return;
-    }
-
-    if (amountNum < 300) {
-      setErrorMessage(t.minimumDepositError);
-      return;
-    }
-
-    if (amountNum > 30000) {
-      setErrorMessage(t.maximumDepositError);
-      return;
-    }
-
-    if (!userData?.phone) {
-      setErrorMessage(t.addMobileNumberError);
-      return;
-    }
-
-    if (!/^\d+$/.test(amount)) {
-      setErrorMessage(t.numericAmountError);
-      return;
-    }
-
+    if (isNaN(amountNum)) { setErrorMessage(t.invalidAmountError); return; }
+    if (amountNum < 300) { setErrorMessage(t.minimumDepositError); return; }
+    if (amountNum > 30000) { setErrorMessage(t.maximumDepositError); return; }
+    if (!/^\d+$/.test(amount)) { setErrorMessage(t.numericAmountError); return; }
     setIsSubmitting(true);
-
     try {
-      // Extract required data from selected bonus
       let bonusData = {
-        bonusType: 'none',
-        bonusId: null,
-        bonusCode: null,
-        bonusAmount: 0,
-        bonusName: null,
-        bonusPercentage: 0,
-        bonusMaxAmount: 0,
-        wageringRequirement: 0,
-        balanceType: 'main_balance', // Default balance type
-        waigergamecategory: [],
-        gameCategory: null
+        bonusType: 'none', bonusId: null, bonusCode: null, bonusAmount: 0,
+        bonusName: null, bonusPercentage: 0, bonusMaxAmount: 0, wageringRequirement: 0,
+        balanceType: 'main_balance', waigergamecategory: [], gameCategory: null
       };
-
-      // If a bonus is selected from dynamic bonuses
       if (selectedBonus && selectedBonus !== 'none') {
         const calculatedAmount = calculateBonusAmount(selectedBonus);
         bonusData = {
@@ -177,116 +154,62 @@ const handleDeposit = async () => {
           bonusMaxAmount: selectedBonus.maxBonus || 0,
           wageringRequirement: selectedBonus.wageringRequirement || 0,
           balanceType: selectedBonus.balanceType || 'bonus_balance',
-          waigergamecategory: selectedBonus.waigergamecategory || 
-                            selectedBonus.gamesCategory || 
-                            selectedBonus.gameCategories || 
-                            [],
+          waigergamecategory: selectedBonus.waigergamecategory || selectedBonus.gamesCategory || selectedBonus.gameCategories || [],
           gameCategory: selectedBonus.gameCategory || null
         };
-        
-        // Validate minimum deposit for the selected bonus
         if (selectedBonus.minDeposit && amountNum < selectedBonus.minDeposit) {
           setErrorMessage(`Minimum deposit for this bonus is ${selectedBonus.minDeposit} BDT`);
           setIsSubmitting(false);
           return;
         }
       }
-
-      // Get token for authorization header
       const token = localStorage.getItem("token");
-
-// In handleDeposit function:
-// Using a counter that persists across function calls
-let orderCounter = (Date.now() % 1000) * 1000;
-
-const generateOrderId = () => {
-  orderCounter = (orderCounter + 1) % 1000000;
-  
-  const timestamp = Date.now();
-  const randomStr = Math.random().toString(36).substring(2, 15);
-  const randomStr2 = Math.random().toString(36).substring(2, 15);
-  const userPart = userData?._id?.slice(-6) || '000000';
-  
-  return `DEP${timestamp}${orderCounter}${randomStr}${randomStr2}${userPart}`;
-};
-
-const orderId = generateOrderId();
-      // Prepare request payload according to backend requirements
-      const payload = {
-        method: selectedMethod || 'bkash',
-        amount: amountNum,
-        bonusType: bonusData.bonusType,
-        bonusId: bonusData.bonusId,
-        bonusCode: bonusData.bonusCode,
-        bonusAmount: bonusData.bonusAmount,
-        bonusName: bonusData.bonusName,
-        bonusPercentage: bonusData.bonusPercentage,
-        bonusMaxAmount: bonusData.bonusMaxAmount,
-        wageringRequirement: bonusData.wageringRequirement,
-        balanceType: bonusData.balanceType,
-        userid: userData._id,
-        playerbalance: userData.balance || 0,
-        waigergamecategory: bonusData.waigergamecategory,
-        gameCategory: bonusData.gameCategory,
-        orderId:orderId
+      let orderCounter = (Date.now() % 1000) * 1000;
+      const generateOrderId = () => {
+        orderCounter = (orderCounter + 1) % 1000000;
+        const timestamp = Date.now();
+        const randomStr = Math.random().toString(36).substring(2, 15);
+        const randomStr2 = Math.random().toString(36).substring(2, 15);
+        const userPart = userData?._id?.slice(-6) || '000000';
+        return `DEP${timestamp}${orderCounter}${randomStr}${randomStr2}${userPart}`;
       };
-      
-      console.log("orderId",orderId);
-
-      // Determine which API endpoint to use based on selected method
+      const orderId = generateOrderId();
+      const payload = {
+        method: selectedMethod || 'bkash', amount: amountNum,
+        bonusType: bonusData.bonusType, bonusId: bonusData.bonusId,
+        bonusCode: bonusData.bonusCode, bonusAmount: bonusData.bonusAmount,
+        bonusName: bonusData.bonusName, bonusPercentage: bonusData.bonusPercentage,
+        bonusMaxAmount: bonusData.bonusMaxAmount, wageringRequirement: bonusData.wageringRequirement,
+        balanceType: bonusData.balanceType, userid: userData._id,
+        playerbalance: userData.balance || 0, waigergamecategory: bonusData.waigergamecategory,
+        gameCategory: bonusData.gameCategory, orderId
+      };
       let apiEndpoint = `${base_url}/user/initiate`;
-      
-      // For Bkash Fast method, first create pending deposit then redirect
       if (selectedMethod === 'bkash_fast') {
-        // First create pending deposit record using the regular initiate endpoint
         const initiateResponse = await axios.post(apiEndpoint, payload, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
+          headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }
         });
-
         if (initiateResponse.data.success) {
-          // Now proceed with bKash Fast payment
-          const bkashFastEndpoint = `${base_url2}/api/payment/p2c/bkash/payment`;
-          const apiKey = localStorage.getItem("apiKey") || "18e5f948356de68e2909";
-          
-       
-          
-          const bkashFastResponse = await axios.post(bkashFastEndpoint, {
-            orderId: orderId,
-            payerId: userData.player_id,
-            amount: amountNum,
-            player_id: userData.player_id,
-            currency: 'BDT',
+          const bkashFastResponse = await axios.post(`${base_url2}/api/payment/p2c/bkash/payment`, {
+            orderId, payerId: userData.player_id, amount: amountNum,
+            player_id: userData.player_id, currency: 'BDT',
             redirectUrl: `${frontend_url}`,
             callbackUrl: `${frontend_url}/callback-payment`,
             sitecallback: `${base_url}/user/callback`,
-            transactionId: initiateResponse.data.transactionId, // Pass the transaction ID from initiate
-            paymentId: initiateResponse.data.paymentId // Pass the payment ID from initiate
+            transactionId: initiateResponse.data.transactionId,
+            paymentId: initiateResponse.data.paymentId
           }, {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              'x-api-key': apiKey,
-              'Content-Type': 'application/json'
-            }
+            headers: { Authorization: `Bearer ${token}`, 'x-api-key': localStorage.getItem("apiKey") || "18e5f948356de68e2909", 'Content-Type': 'application/json' }
           });
-
           if (bkashFastResponse.data.success && bkashFastResponse.data.link) {
             setSuccessMessage(t.paymentInitiatedSuccess);
-            
-            // Save deposit details
             localStorage.setItem('lastDeposit', JSON.stringify({
-              amount: amountNum,
-              bonus: bonusData,
-              method: 'bkash_fast',
+              amount: amountNum, bonus: bonusData, method: 'bkash_fast',
               paymentId: bkashFastResponse.data.paymentId || initiateResponse.data.paymentId,
               orderId: bkashFastResponse.data.orderId || orderId,
               transactionId: initiateResponse.data.transactionId,
               timestamp: new Date().toISOString()
             }));
-            
-            // Redirect to bKash payment page
             window.location.href = bkashFastResponse.data.link;
           } else {
             setErrorMessage(bkashFastResponse.data.message || t.paymentInitiateError);
@@ -294,52 +217,33 @@ const orderId = generateOrderId();
         } else {
           setErrorMessage(initiateResponse.data.message || t.paymentInitiateError);
         }
-        
         setIsSubmitting(false);
         return;
       }
-
-      // First create pending deposit record (for regular methods)
       const initiateResponse = await axios.post(apiEndpoint, payload, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }
       });
-
       if (initiateResponse.data.success && initiateResponse.data.redirectUrl) {
         setSuccessMessage(t.paymentInitiatedSuccess);
-        
-        // Save deposit details to localStorage for reference
         localStorage.setItem('lastDeposit', JSON.stringify({
-          amount: amountNum,
-          bonus: bonusData,
+          amount: amountNum, bonus: bonusData,
           waigergamecategory: bonusData.waigergamecategory,
           gameCategory: bonusData.gameCategory,
           transactionId: initiateResponse.data.transactionId,
           paymentId: initiateResponse.data.paymentId,
           timestamp: new Date().toISOString()
         }));
-        
-        // Redirect to payment gateway
         window.location.href = initiateResponse.data.redirectUrl;
       } else {
         setErrorMessage(initiateResponse.data.message || t.paymentInitiateError);
       }
     } catch (error) {
-      console.error(t.depositError, error);
-      
-      // Handle specific error cases
       if (error.response) {
-        if (error.response.status === 400) {
-          setErrorMessage(error.response.data.message || t.paymentFailedError);
-        } else if (error.response.status === 401) {
+        if (error.response.status === 400) setErrorMessage(error.response.data.message || t.paymentFailedError);
+        else if (error.response.status === 401) {
           setErrorMessage(t.sessionExpiredError || "Session expired. Please login again.");
-          // Optionally redirect to login
           setTimeout(() => navigate('/login'), 3000);
-        } else {
-          setErrorMessage(error.response.data?.message || t.paymentFailedError);
-        }
+        } else setErrorMessage(error.response.data?.message || t.paymentFailedError);
       } else {
         setErrorMessage(t.networkError || "Network error. Please check your connection.");
       }
@@ -348,594 +252,381 @@ const orderId = generateOrderId();
     }
   };
 
-  useEffect(() => {
-    const fetchAvailableBonuses = async () => {
-      try {
-        setBonusLoading(true);
-        const user = JSON.parse(localStorage.getItem("user"));
-        const token = localStorage.getItem("token");
-        
-        if (!user || !user._id) {
-          console.error("No user found in localStorage");
-          return;
-        }
-        
-        // Pass userid as query parameter
-        const response = await axios.get(
-          `${base_url}/user/bonuses/available`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-            params: {  // Pass as query params
-              userid: user._id
-              // Add bonusType if needed: bonusType: 'your_type'
-            }
-          }
-        );
-        if (response.data) {
-          setAvailableBonuses(response.data.data)
-        }
-      } catch (err) {
-        console.error("Error fetching bonuses:", err);
-      } finally {
-        setBonusLoading(false);
-      }
-    };
+  // ─── Bonus card gradient palettes ───────────────────────────────────────────
+  const bonusGradients = [
+    'linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%)',
+    'linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%)',
+    'linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)',
+    'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+    'linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%)',
+    'linear-gradient(135deg, #f97316 0%, #eab308 100%)',
+  ];
 
-    fetchAvailableBonuses();
-  }, [base_url]);
+  const bonusEmojis = ['🎁', '💎', '🔥', '⚡', '🎯', '🚀'];
 
-  // Calculate bonus amount for a specific bonus
-  const calculateBonusAmount = (bonus) => {
-    if (!amount || isNaN(parseFloat(amount))) return 0;
-    
-    const amountNum = parseFloat(amount);
-    let calculatedBonus = 0;
-    
-    if (bonus.percentage > 0) {
-      calculatedBonus = (amountNum * bonus.percentage) / 100;
-      if (bonus.maxBonus && calculatedBonus > bonus.maxBonus) {
-        calculatedBonus = bonus.maxBonus;
-      }
-    } else if (bonus.amount > 0) {
-      calculatedBonus = bonus.amount;
-    }
-    
-    return calculatedBonus;
-  };
-
-  // Handle payment callback when returning from payment gateway
-  useEffect(() => {
-    const checkPaymentStatus = async () => {
-      const urlParams = new URLSearchParams(window.location.search);
-      const paymentId = urlParams.get('paymentId');
-      const status = urlParams.get('status');
-
-      if (paymentId && status) {
-        try {
-          const response = await axios.get(`${base_url}/api/deposit/status?paymentId=${paymentId}`);
-          if (response.data.success) {
-            setSuccessMessage(t.depositSuccess);
-            fetchUserData(); // Refresh user data
-          } else {
-            setErrorMessage(t.depositFailedOrProcessing);
-          }
-        } catch (error) {
-          console.error(t.paymentStatusError, error);
-          setErrorMessage(t.paymentStatusCheckError);
-        }
-      }
-    };
-
-    checkPaymentStatus();
-  }, [base_url, fetchUserData, t]);
-
-  // Scroll to top on initial load
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, []);
-
+  // ─── Loading State ───────────────────────────────────────────────────────────
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-64">
+      <div className="flex justify-center items-center h-64 bg-[#f0f9fc] min-h-screen">
         <div className="relative">
           <div className="animate-spin rounded-full h-12 w-12 border-4 border-t-cyan-500 border-b-cyan-500 border-l-transparent border-r-transparent"></div>
-          <div className="absolute inset-0 animate-pulse rounded-full h-12 w-12 bg-cyan-500/20 blur-sm"></div>
         </div>
       </div>
     );
   }
 
+  // ─── Error State ─────────────────────────────────────────────────────────────
   if (error) {
     return (
-      <div className="bg-gray-900 min-h-screen text-white font-anek">
-        <div className="bg-gray-800 py-2 px-2 shadow-md border-b-[1px] border-gray-600">
-          <div className="max-w-2xl mx-auto cursor-pointer flex items-center">
-            <button 
-              onClick={() => navigate(-1)} 
-              className="p-2 rounded-full cursor-pointer hover:bg-gray-700 mr-4"
-            >
-              <MdArrowBackIosNew className="text-xl" />
+      <div className="bg-[#f0f9fc] min-h-screen font-sans">
+        <div className="bg-white py-3 px-4 shadow-sm border-b border-gray-100">
+          <div className="max-w-md mx-auto flex items-center gap-3">
+            <button onClick={() => navigate(-1)} className="p-2 rounded-full hover:bg-gray-100 text-cyan-500">
+              <MdArrowBackIosNew />
             </button>
-            <h1 className="text-[18px] font-[600]">{t.depositTitle}</h1>
+            <h1 className="text-base font-semibold text-gray-800">{t.depositTitle}</h1>
           </div>
         </div>
-        <div className="text-center py-4 text-yellow-600 p-4">{t.userDataError}</div>
+        <div className="text-center py-6 text-yellow-600 px-4">{t.userDataError}</div>
       </div>
     );
   }
 
-  if (!hasMobileNumber) {
-    return (
-      <div className="bg-gray-900 min-h-screen text-white font-anek">
-        <div className="bg-gray-800 py-2 px-2 shadow-md border-b-[1px] border-gray-600">
-          <div className="max-w-2xl mx-auto cursor-pointer flex items-center">
-            <button 
-              onClick={() => navigate(-1)} 
-              className="p-2 rounded-full cursor-pointer hover:bg-gray-700 mr-4"
-            >
-              <MdArrowBackIosNew className="text-xl" />
-            </button>
-            <h1 className="text-[18px] font-[600]">{t.depositTitle}</h1>
-          </div>
-        </div>
-        <div className="p-6 rounded-lg max-w-2xl mx-auto text-center">
-          <div className="p-4 rounded mb-4">
-            <h3 className="font-bold text-lg">{t.addMobileNumber}</h3>
-            <p className="mt-2">{t.addMobileNumberDesc}</p>
-            <p className="text-yellow-500">{t.addMobileNumberInstruction}</p>
-          </div>
-          <button 
-            className="bg-cyan-500 hover:bg-cyan-600 cursor-pointer text-gray-900 py-2 px-6 rounded text-lg"
-            onClick={() => navigate('/profile')}
-          >
-            {t.editProfile}
-          </button>
-        </div>
-      </div>
-    );
-  }
-
+  // ─── Main UI ─────────────────────────────────────────────────────────────────
   return (
-    <div className="bg-gray-900 min-h-screen font-anek text-white">
-      {/* Header */}
-      <header className="bg-gray-800 border-b border-gray-700 py-4 px-4 sticky top-0 z-10">
-        <div className="container mx-auto flex items-center">
-          <button 
-            onClick={() => navigate(-1)}
-            className="mr-4 p-2 rounded-full cursor-pointer text-cyan-500 hover:bg-gray-700 transition-colors"
-          >
-            <MdArrowBackIosNew/>
-          </button>
-          <h1 className="text-[18px] font-[600] text-gray-200">{t.depositTitle}</h1>
-        </div>
-      </header>
-      
-      <div className="p-2">
-        <div className="bg-gray-800 p-2 rounded-lg border border-gray-700 max-w-4xl mx-auto">
+    <div className="bg-[#C7F6FF] min-h-screen font-anek p-[30px]">
 
-          {/* Payment Method Selection */}
-          <div className="mb-4">
-            <label className="block font-medium mb-2 text-white text-[16px]">{t.paymentMethod}</label>
-            <div className="grid grid-cols-3 gap-[10px]">
+      <div className="max-w-md bg-[#F5F5F5] mx-auto p-[15px] rounded-[20px]">
+
+        {/* Close Icon - Top Right */}
+        <div className="flex justify-end mb-2">
+          <button 
+            onClick={() => navigate('/')} 
+            className="p-2 rounded-full hover:bg-gray-200 text-gray-600 transition-colors"
+            aria-label="Close"
+          >
+            <MdClose size={24} />
+          </button>
+        </div>
+
+        {/* Deposit / Withdraw Tabs */}
+        <div className="rounded-xl p-1 flex mb-4">
+          <button
+            onClick={() => setActiveTab('deposit')}
+            className={`flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all ${
+              activeTab === 'deposit'
+                ? 'bg-cyan-500 text-white shadow-sm'
+                : 'text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            {t.depositTitle || 'Deposit'}
+          </button>
+          <button
+            onClick={() => navigate('/withdraw')}
+            className={`flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all ${
+              activeTab === 'withdraw'
+                ? 'bg-cyan-500 text-white shadow-sm'
+                : 'text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            {t.withdrawTitle || 'Withdraw'}
+          </button>
+        </div>
+
+        {/* Card Wrapper */}
+        <div className="overflow-hidden">
+
+          {/* Payment Method */}
+          <div className="p-4 border-b border-gray-50">
+            <p className="text-sm font-semibold text-gray-700 mb-3">
+              {t.paymentMethod || 'Select your preferred payment method'}
+            </p>
+            <div className="grid grid-cols-3 gap-2.5">
+
+              {/* Bkash */}
               <button
                 onClick={() => setSelectedMethod('bkash')}
-                className={`px-4 py-2 rounded border cursor-pointer flex-1 min-w-[120px] ${
-                  selectedMethod === 'bkash' ? 'bg-cyan-500 border-cyan-500 text-gray-900' : 'bg-gray-700 border-gray-600'
+                className={`rounded-xl border-2 p-3 flex flex-col items-center gap-2 transition-all ${
+                  selectedMethod === 'bkash'
+                    ? 'border-cyan-400 bg-cyan-50'
+                    : 'border-gray-100 bg-gray-50 hover:border-gray-200'
                 }`}
               >
-                <div className="flex items-center justify-center flex-col gap-2">
-                  <img
-                    src="https://images.5949390294.com/mcs-images/bank_type/BKASH/BN_2_20240312225413337.png"
-                    alt="bkash"
-                    className="w-[50px]"
-                  />
-                  <span className="text-[14px] font-bold">{t.bkash}</span>
-                </div>
+                <img
+                  src="https://images.5949390294.com/mcs-images/bank_type/BKASH/BN_2_20240312225413337.png"
+                  alt="bkash"
+                  className="w-12 h-8 object-contain"
+                />
+                <span className="text-[11px] font-bold text-gray-600">{t.bkash || 'Bkash P2P'}</span>
               </button>
-              
-              {/* Conditionally render bkash_fast button only if auto payment is true and not loading */}
+
+              {/* Nagad */}
+              <button
+                onClick={() => setSelectedMethod('nagad')}
+                className={`rounded-xl border-2 p-3 flex flex-col items-center gap-2 transition-all ${
+                  selectedMethod === 'nagad'
+                    ? 'border-cyan-400 bg-cyan-50'
+                    : 'border-gray-100 bg-gray-50 hover:border-gray-200'
+                }`}
+              >
+                <img
+                  src="https://images.5949390294.com/mcs-images/bank_type/NAGAD/BN_2_20240312230148421.png"
+                  alt="nagad"
+                  className="w-12 h-8 object-contain"
+                />
+                <span className="text-[11px] font-bold text-gray-600">{t.nagad || 'Nagad P2P'}</span>
+              </button>
+
+              {/* Bkash Fast (conditional) */}
               {!autoPaymentLoading && autoPaymentStatus && (
                 <button
                   onClick={() => setSelectedMethod('bkash_fast')}
-                  className={`px-4 py-2 cursor-pointer rounded border flex-1 min-w-[120px] ${
-                    selectedMethod === 'bkash_fast' ? 'bg-cyan-500 border-cyan-500 text-gray-900' : 'bg-gray-700 border-gray-600'
+                  className={`rounded-xl border-2 p-3 flex flex-col items-center gap-2 transition-all ${
+                    selectedMethod === 'bkash_fast'
+                      ? 'border-cyan-400 bg-cyan-50'
+                      : 'border-gray-100 bg-gray-50 hover:border-gray-200'
                   }`}
                 >
-                  <div className="flex items-center justify-center flex-col gap-2">
-                    <img
-                      src="https://play-lh.googleusercontent.com/1CRcUfmtwvWxT2g-xJF8s9_btha42TLi6Lo-qVkVomXBb_citzakZX9BbeY51iholWs"
-                      alt="bkash fast"
-                      className="w-[50px] rounded-[10px]"
-                    />
-                    <span className="text-[14px] font-bold">{t.bkashFast}</span>
-                  </div>
+                  <img
+                    src="https://play-lh.googleusercontent.com/1CRcUfmtwvWxT2g-xJF8s9_btha42TLi6Lo-qVkVomXBb_citzakZX9BbeY51iholWs"
+                    alt="bkash fast"
+                    className="w-12 h-8 object-contain rounded-md"
+                  />
+                  <span className="text-[11px] font-bold text-gray-600">{t.bkashFast || 'Bkash Fast'}</span>
                 </button>
               )}
-              
-              <button
-                onClick={() => setSelectedMethod('nagad')}
-                className={`px-4 py-2 cursor-pointer rounded border flex-1 min-w-[120px] ${
-                  selectedMethod === 'nagad' ? 'bg-cyan-500 border-cyan-500 text-gray-900' : 'bg-gray-700 border-gray-600'
-                }`}
-              >
-                <div className="flex items-center justify-center flex-col gap-2">
-                  <img
-                    src="https://images.5949390294.com/mcs-images/bank_type/NAGAD/BN_2_20240312230148421.png"
-                    alt="nagad"
-                    className="w-[50px]"
-                  />
-                  <span className="text-[14px] font-bold">{t.nagad}</span>
-                </div>
-              </button>
             </div>
           </div>
 
-          {/* Deposit Amount Section */}
-          <div className="mb-4">
-            <label className="block font-medium mb-2 text-white text-[16px]">{t.depositAmount}</label>
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2 mb-2">
+          {/* Amount Input */}
+          <div className="p-4 border-b border-gray-50">
+            <p className="text-sm font-semibold text-gray-700 mb-3">
+              {t.depositAmount || 'Enter Amount'}
+            </p>
+            <div className="relative mb-2">
+              <input
+                type="text"
+                value={amount}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  if (v === '' || /^\d+$/.test(v)) {
+                    setAmount(v);
+                    setErrorMessage('');
+                  }
+                }}
+                placeholder={t.amountPlaceholder || 'Input your preferred amount'}
+                className="w-full border border-gray-200 rounded-xl py-3 pl-4 pr-10 text-sm text-gray-800 bg-gray-50 focus:outline-none focus:border-cyan-400 focus:bg-white transition-colors"
+              />
+              <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-bold text-gray-400">৳</span>
+            </div>
+            <p className="text-[11px] text-red-400 mb-3">
+              *{t.minimumAmount?.replace('{amount}', formatNumber(300)) || 'Min & maximum deposit amount'}: 300–{formatNumber(30000)} BDT
+            </p>
+
+            {/* Quick Amount Buttons */}
+            <div className="flex flex-wrap gap-2">
               {amounts.map((amt) => (
                 <button
                   key={amt}
-                  onClick={() => {
-                    setAmount(amt.toString());
-                    setErrorMessage('');
-                  }}
-                  className={`bg-gray-700 cursor-pointer hover:bg-cyan-500 hover:text-gray-900 px-2 py-2 rounded text-sm text-center border ${
-                    amount === amt.toString() ? 'border-cyan-500' : 'border-gray-600'
+                  onClick={() => { setAmount(amt.toString()); setErrorMessage(''); }}
+                  className={`px-3 py-1.5 rounded-lg border text-xs font-semibold transition-all ${
+                    amount === amt.toString()
+                      ? 'bg-cyan-500 border-cyan-500 text-white'
+                      : 'bg-gray-50 border-gray-200 text-gray-600 hover:border-cyan-300 hover:text-cyan-600'
                   }`}
                 >
-                  {formatNumber(amt)} ৳
+                  {formatNumber(amt)}৳
                 </button>
               ))}
             </div>
-            <input
-              type="text"
-              value={amount}
-              onChange={(e) => {
-                const value = e.target.value;
-                if (value === '' || /^\d+$/.test(value)) {
-                  setAmount(value);
-                  setErrorMessage('');
-                }
-              }}
-              className="mt-3 w-full p-3 border border-gray-600 rounded text-sm bg-gray-800 text-white text-[14px]"
-              placeholder={t.amountPlaceholder}
-              min="100"
-              max="30000"
-            />
-            <p className="text-sm text-gray-400 mt-1">
-              {t.minimumAmount.replace('{amount}', formatNumber(100))} {t.maximumAmount.replace('{amount}', formatNumber(30000))} <br />
-              {t.depositTime}
-            </p>
           </div>
 
-          {/* Enhanced Bonus Selection Section */}
+          {/* ─── Bonus Section: Horizontal Scroll Cards ─────────────────────── */}
           {(availableBonuses.length > 0 || bonusLoading) && (
-            <div className="mb-6">
-              <div className="flex items-center justify-between mb-3">
-                <label className="block font-bold text-white text-[17px]">
-                  {t.selectBonusOffer || "Select Bonus Offer"}
-                </label>
+            <div className="py-3 border-b border-gray-50">
+              <div className="flex items-center justify-between px-4 mb-2">
+                <p className="text-sm font-semibold text-gray-700">
+                  {t.selectBonusOffer || 'Select Bonus Offer'}
+                </p>
+                <span className="text-[10px] text-gray-400 font-medium">← scroll →</span>
               </div>
-              
+
               {bonusLoading ? (
-                <div className="text-center py-6">
+                <div className="text-center py-4">
                   <div className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-solid border-cyan-500 border-r-transparent"></div>
-                  <p className="text-sm text-gray-400 mt-3">Loading available bonuses...</p>
+                  <p className="text-xs text-gray-400 mt-2">Loading bonuses...</p>
                 </div>
-              ) : availableBonuses.length > 0 ? (
-                <div className="grid grid-cols-1 gap-3">
-                  {/* No Bonus Option - Prominent */}
+              ) : (
+                <div
+                  className="flex gap-3 overflow-x-auto px-4 pb-2"
+                  style={{
+                    scrollbarWidth: 'none',
+                    msOverflowStyle: 'none',
+                    WebkitOverflowScrolling: 'touch',
+                    cursor: 'grab',
+                  }}
+                  onMouseDown={(e) => {
+                    const el = e.currentTarget;
+                    el.style.cursor = 'grabbing';
+                    const startX = e.pageX - el.offsetLeft;
+                    const scrollLeft = el.scrollLeft;
+                    const onMove = (ev) => {
+                      const x = ev.pageX - el.offsetLeft;
+                      el.scrollLeft = scrollLeft - (x - startX);
+                    };
+                    const onUp = () => {
+                      el.style.cursor = 'grab';
+                      window.removeEventListener('mousemove', onMove);
+                      window.removeEventListener('mouseup', onUp);
+                    };
+                    window.addEventListener('mousemove', onMove);
+                    window.addEventListener('mouseup', onUp);
+                  }}
+                >
+                  {/* No Bonus Card */}
                   <button
                     type="button"
-                    className={`p-4 rounded-lg flex flex-col cursor-pointer items-start justify-center transition-all duration-300 ${
-                      selectedBonus === null
-                        ? "bg-gray-800 border-2 border-cyan-500 shadow-lg shadow-cyan-500/20"
-                        : "bg-gray-800 hover:bg-gray-750 border-2 border-gray-700 hover:border-gray-600"
-                    }`}
                     onClick={() => setSelectedBonus(null)}
+                    className="flex-shrink-0 relative rounded-2xl overflow-hidden transition-all select-none"
+                    style={{
+                      width: 'calc(90.9% - 6px)',
+                      minHeight: '90px',      /* ← reduced from 130px */
+                      background: selectedBonus === null
+                        ? 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)'
+                        : 'linear-gradient(135deg, #e5e7eb 0%, #d1d5db 100%)',
+                      boxShadow: selectedBonus === null
+                        ? '0 4px 20px rgba(6, 182, 212, 0.4)'
+                        : '0 2px 8px rgba(0,0,0,0.06)',
+                      transform: selectedBonus === null ? 'scale(1.03)' : 'scale(1)',
+                    }}
                   >
-                    <div className="flex items-center justify-between w-full">
-                      <div>
-                        <span className="text-[16px] block text-left font-semibold text-white">
-                          {t.noBonus || "No Bonus"}
-                        </span>
-                        <span className="block text-[13px] text-gray-400 mt-1">
-                          {t.noBonusDesc || "Proceed without any bonus"}
-                        </span>
+                    {/* Decorative circles */}
+                    <div style={{
+                      position: 'absolute', top: '-14px', right: '-14px',
+                      width: '55px', height: '55px', borderRadius: '50%',
+                      background: 'rgba(255,255,255,0.12)'
+                    }} />
+                    <div style={{
+                      position: 'absolute', bottom: '-8px', left: '-8px',
+                      width: '40px', height: '40px', borderRadius: '50%',
+                      background: 'rgba(255,255,255,0.08)'
+                    }} />
+                    <div className="relative p-3 flex flex-row items-center gap-3 h-full" style={{ minHeight: '90px' }}>
+                      <div className="text-xl flex-shrink-0">🚫</div>
+                      <div className="flex flex-col">
+                        <div className={`text-xs font-black tracking-wide ${selectedBonus === null ? 'text-white' : 'text-gray-600'}`}>
+                          {t.noBonus || 'No Bonus'}
+                        </div>
+                        <div className={`text-[10px] leading-tight ${selectedBonus === null ? 'text-white/70' : 'text-gray-400'}`}>
+                          {t.noBonusDesc || 'Continue without offer'}
+                        </div>
                       </div>
+                      {/* Selected checkmark */}
                       {selectedBonus === null && (
-                        <div className="flex items-center justify-center w-6 h-6 bg-cyan-500 rounded-full">
-                          <svg className="w-3 h-3 text-gray-900" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                        <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-white flex items-center justify-center">
+                          <svg className="w-3 h-3 text-cyan-500" fill="none" viewBox="0 0 12 12" stroke="currentColor" strokeWidth="2.5">
+                            <polyline points="2,6 5,9 10,3" />
                           </svg>
                         </div>
                       )}
                     </div>
                   </button>
 
-                  {/* Available Bonuses */}
-                  {availableBonuses.map((bonus) => {
+                  {/* Dynamic Bonus Cards */}
+                  {availableBonuses.map((bonus, idx) => {
                     const calculatedAmount = calculateBonusAmount(bonus);
-                    const isSelected = selectedBonus && 
-                      ((selectedBonus._id && selectedBonus._id === bonus._id) || 
+                    const isSelected = selectedBonus &&
+                      ((selectedBonus._id && selectedBonus._id === bonus._id) ||
                        (selectedBonus.id && selectedBonus.id === bonus.id));
-                    
+                    const gradient = bonusGradients[idx % bonusGradients.length];
+                    const emoji = bonusEmojis[idx % bonusEmojis.length];
+
                     return (
                       <button
                         type="button"
                         key={bonus._id || bonus.id}
-                        className={`p-4 rounded-lg flex flex-col cursor-pointer items-start justify-center transition-all duration-300 transform hover:scale-[1.02] ${
-                          isSelected
-                            ? "bg-gradient-to-r from-cyan-900/30 to-blue-900/30 border-2 border-cyan-500 shadow-lg shadow-cyan-500/20"
-                            : "bg-gray-800 hover:bg-gray-750 border-2 border-gray-700 hover:border-cyan-500/50"
-                        }`}
-                        onClick={() => {
-                          const selectedBonusObj = {
-                            ...bonus,
-                            calculatedAmount
-                          };
-                          setSelectedBonus(selectedBonusObj);
+                        onClick={() => setSelectedBonus({ ...bonus, calculatedAmount })}
+                        className="flex-shrink-0 relative rounded-2xl overflow-hidden transition-all select-none"
+                        style={{
+                          width: 'calc(90.9% - 6px)',
+                          minHeight: '90px',      /* ← reduced from 130px */
+                          background: gradient,
+                          boxShadow: isSelected
+                            ? '0 6px 24px rgba(0,0,0,0.22)'
+                            : '0 2px 8px rgba(0,0,0,0.08)',
+                          transform: isSelected ? 'scale(1.04)' : 'scale(1)',
+                          opacity: isSelected ? 1 : 0.88,
                         }}
                       >
-                        <div className="flex justify-between items-start w-full mb-2">
-                          <div className="text-left flex-1">
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className="text-[20px] font-semibold text-white">
-                                {bonus.name}
-                              </span>
-                              {bonus.tag && (
-                                <span className="bg-purple-500/20 text-purple-300 text-xs px-2 py-0.5 rounded">
-                                  {bonus.tag}
-                                </span>
-                              )}
+
+                        <div className="relative p-3 flex flex-row items-center gap-3" style={{ minHeight: '90px' }}>
+                          {/* Emoji */}
+                          <div className="text-xl flex-shrink-0">{emoji}</div>
+
+                          {/* Content */}
+                          <div className="flex flex-col flex-1 min-w-0">
+                            {/* Name */}
+                            <div className="text-white text-[17px] font-bold truncate leading-tight mt-0.5">
+                              {bonus.name}
                             </div>
-                            
-                            <p className="text-[15px] text-cyan-300 mb-1">
-                              {bonus.description}
-                            </p>
-                            
-                            {/* Game Categories Section */}
-                            {bonus.gamesCategory && bonus.gamesCategory.length > 0 && (
-                              <div className="mb-2">
-                                <div className="flex items-center gap-1 text-[13px] text-gray-400 mb-1">
-                                  <span className="font-medium">Games Category:</span>
-                                </div>
-                                <div className="flex flex-wrap gap-1">
-                                  {bonus.gamesCategory.map((game, index) => (
-                                    <span 
-                                      key={index} 
-                                      className="bg-blue-900/30 text-blue-300 text-[13px] px-2 py-1 rounded border border-blue-700/50"
-                                    >
-                                      {game}
-                                    </span>
-                                  ))}
-                                </div>
-                              </div>
-                            )}
-                           
-                            {/* <div className="flex items-center gap-3 text-[12px] text-gray-400">
-                              <span className="flex items-center gap-1">
-                                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                                  <path fillRule="evenodd" d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.12A3 3 0 017 13s.879.5 2.5.5c0-1 .5-4 1.25-4.5.5 1 .786 1.293 1.371 1.879A2.99 2.99 0 0113 13a2.99 2.99 0 01-.879 2.121z" clipRule="evenodd" />
-                                </svg>
-                                Code: {bonus.bonusCode}
-                              </span>
-                              {bonus.wageringRequirement > 0 && (
-                                <span className="flex items-center gap-1">
-                                  <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
-                                  </svg>
-                                  {bonus.wageringRequirement}x Wager
-                                </span>
-                              )}
-                              {bonus.validityDays > 0 && (
-                                <span className="flex items-center gap-1">
-                                  <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
-                                  </svg>
-                                  {bonus.validityDays} days
-                                </span>
-                              )}
-                            </div> */}
                           </div>
-                          
-                          <div className="flex flex-col items-end gap-2">
-                            {amount && !isNaN(parseFloat(amount)) && calculatedAmount > 0 && (
-                              <div className="text-right">
-                                <div className="text-cyan-300 px-3 py-1 rounded-lg">
-                                  <span className="text-[14px] font-bold">+৳{calculatedAmount.toFixed(2)}</span>
-                                  <div className="text-[10px] text-cyan-400">
-                                    Bonus
-                                  </div>
-                                </div>
-                              </div>
-                            )}
-                            {isSelected && (
-                              <div className="flex items-center justify-center w-6 h-6 bg-cyan-500 rounded-full">
-                                <svg className="w-3 h-3 text-gray-900" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                                </svg>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                        
-                        {/* Bonus Details */}
-                        <div className="w-full mt-2 pt-2 border-t border-gray-700">
-                          <div className="flex justify-between text-[14px]">
-                            {bonus.percentage > 0 && (
-                              <div className="text-left">
-                                <span className="text-gray-400">Percentage:</span>
-                                <span className="ml-1 text-green-300">{bonus.percentage}%</span>
-                              </div>
-                            )}
-                         
-                            {bonus.minDeposit > 0 && (
-                              <div className="text-left">
-                                <span className="text-gray-400">Min Deposit:</span>
-                                <span className="ml-1 text-orange-300">৳{bonus.minDeposit}</span>
-                              </div>
-                            )}
-                          </div>
+
+                          {/* Checkmark */}
+                          {isSelected && (
+                            <div className="w-5 h-5 rounded-full bg-white flex items-center justify-center flex-shrink-0 self-start">
+                              <svg className="w-3 h-3" fill="none" viewBox="0 0 12 12" stroke="#7c3aed" strokeWidth="2.5">
+                                <polyline points="2,6 5,9 10,3" />
+                              </svg>
+                            </div>
+                          )}
                         </div>
                       </button>
                     );
                   })}
                 </div>
-              ) : (
-                <div className="text-center py-4">
-                  <p className="text-gray-400">No bonus offers available at the moment.</p>
-                </div>
               )}
             </div>
           )}
-          
-          {/* Error/Success Messages */}
+
+          {/* Error / Success Messages */}
           {errorMessage && (
-            <div className="bg-red-500/20 border border-red-500 text-red-500 p-3 rounded mb-4 text-[14px]">
-              <div className="flex items-center">
-                <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                </svg>
-                {errorMessage}
-              </div>
+            <div className="mx-4 mb-3 bg-red-50 border border-red-200 text-red-500 p-3 rounded-xl text-xs flex items-center gap-2">
+              <svg className="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+              {errorMessage}
             </div>
           )}
           {successMessage && (
-            <div className="bg-green-500/20 border border-green-500 text-green-500 p-3 rounded mb-4 text-[14px]">
-              <div className="flex items-center">
-                <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                </svg>
-                {successMessage}
-              </div>
+            <div className="mx-4 mb-3 bg-green-50 border border-green-200 text-green-600 p-3 rounded-xl text-xs flex items-center gap-2">
+              <svg className="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+              {successMessage}
             </div>
           )}
-          
-          {/* Submit Button with Loading Animation */}
-          <button 
-            className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-theme_color2 cursor-pointer text-gray-900 py-3 px-4 rounded-lg w-full text-[16px] font-bold flex justify-center items-center disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-[1.02] shadow-lg shadow-cyan-500/20"
-            onClick={handleDeposit}
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? (
-              <>
-                <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-gray-900" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                {t.processing}
-              </>
-            ) : (
-              <div className="flex items-center">
-                {t.requestDeposit}
-              </div>
-            )}
-          </button>
 
-          {/* Terms and Conditions */}
-          <div className="mt-4 p-3 bg-gray-800 rounded-lg border border-gray-700">
-            <p className="font-bold mb-2 text-cyan-400 text-[15px]">{t.termsAndConditions}</p>
-            <ul className="space-y-1 pl-2">
-              <li className="text-gray-400 text-[13px] flex items-start">
-                <span className="text-cyan-500 mr-2">•</span>
-                {t.conditionMinDeposit}
-              </li>
-              <li className="text-gray-400 text-[13px] flex items-start">
-                <span className="text-cyan-500 mr-2">•</span>
-                {t.conditionAccountBlock}
-              </li>
-              <li className="text-gray-400 text-[13px] flex items-start">
-                <span className="text-cyan-500 mr-2">•</span>
-                {t.conditionBonusTerms}
-              </li>
-              <li className="text-gray-400 text-[13px] flex items-start">
-                <span className="text-cyan-500 mr-2">•</span>
-                {t.conditionProcessingTime}
-              </li>
-            </ul>
-          </div>
-
-          {/* Deposit History */}
-          <div className="bg-gray-800 p-3 mt-6 rounded-lg border border-gray-700">
-            <div className="flex items-center justify-between mb-3">
-              <h4 className="font-bold text-[15px] text-white">{t.depositHistory}</h4>
-              {userData?.depositHistory?.length > 0 && (
-                <span className="text-cyan-400 text-xs bg-cyan-500/10 px-2 py-1 rounded">
-                  {userData.depositHistory.length} Transactions
-                </span>
+          {/* Submit Button */}
+          <div className="px-4 pb-4">
+            <button
+              onClick={handleDeposit}
+              disabled={isSubmitting}
+              className="w-full py-3.5 rounded-xl bg-cyan-500 hover:bg-cyan-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold text-sm transition-colors flex items-center justify-center gap-2"
+            >
+              {isSubmitting ? (
+                <>
+                  <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  {t.processing || 'Processing...'}
+                </>
+              ) : (
+                t.requestDeposit || 'Click to Pay'
               )}
-            </div>
-            <div className="overflow-x-auto rounded-lg border border-gray-700">
-              <table className="w-full text-[13px]">
-                <thead className="bg-gray-900">
-                  <tr>
-                    <th className="py-2 px-3 text-left text-gray-300 font-medium">{t.date}</th>
-                    <th className="py-2 px-3 text-left text-gray-300 font-medium">{t.amount}</th>
-                    <th className="py-2 px-3 text-left text-gray-300 font-medium">{t.method}</th>
-                    <th className="py-2 px-3 text-left text-gray-300 font-medium">{t.status}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {userData?.depositHistory?.length > 0 ? (
-                    [...userData.depositHistory]
-                      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-                      .slice(0, 5)
-                      .map((deposit, index) => (
-                        <tr key={index} className="border-t border-gray-700 hover:bg-gray-750 transition-colors">
-                          <td className="py-2 px-3">
-                            {new Date(deposit.createdAt).toLocaleDateString(language.code === 'bn' ? 'bn-BD' : 'en-US', {
-                              day: 'numeric',
-                              month: 'short',
-                              hour: '2-digit',
-                              minute: '2-digit'
-                            })}
-                          </td>
-                          <td className="py-2 px-3 font-medium">
-                            {formatNumber(deposit.amount)} ৳
-                          </td>
-                          <td className="py-2 px-3">
-                            <div className="flex items-center">
-                              <img
-                                src={deposit.method === 'bkash' 
-                                  ? "https://images.5949390294.com/mcs-images/bank_type/BKASH/BN_2_20240312225413337.png"
-                                  : deposit.method === 'bkash_fast'
-                                  ? "https://play-lh.googleusercontent.com/1CRcUfmtwvWxT2g-xJF8s9_btha42TLi6Lo-qVkVomXBb_citzakZX9BbeY51iholWs"
-                                  : "https://images.5949390294.com/mcs-images/bank_type/NAGAD/BN_2_20240312230148421.png"}
-                                alt={deposit.method}
-                                className="w-5 h-5 mr-2 rounded-full"
-                              />
-                              {deposit.method === 'bkash' ? t.bkash : deposit.method === 'bkash_fast' ? 'Bkash Fast' : deposit.method === 'nagad' ? t.nagad : deposit.method}
-                            </div>
-                          </td>
-                          <td className="py-2 px-3">
-                            <span className={`px-2 py-1 rounded text-xs font-medium ${
-                              deposit.status === 'completed' ? 'bg-green-500/20 text-green-500' :
-                              deposit.status === 'pending' ? 'bg-yellow-500/20 text-yellow-500' :
-                              'bg-red-500/20 text-red-500'
-                            }`}>
-                              {deposit.status === 'completed' ? t.completedStatus :
-                               deposit.status === 'pending' ? t.pendingStatus :
-                               t.failedStatus}
-                            </span>
-                          </td>
-                        </tr>
-                      ))
-                  ) : (
-                    <tr>
-                      <td colSpan="4" className="text-center py-4 text-gray-500">
-                        {t.noDepositHistory}
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
+            </button>
           </div>
+
         </div>
       </div>
     </div>

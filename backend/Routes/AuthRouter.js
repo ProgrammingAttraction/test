@@ -1026,23 +1026,31 @@ router.post('/oneclick-login', async (req, res) => {
 //         });
 //     }
 // });
-
 router.post('/signup', async (req, res) => {
     try {
-        const { email, password, referralCode, clickId, affiliateCode } = req.body; // Added affiliateCode
-       console.log(req.body)
+        const { email, password, referralCode, clickId, affiliateCode, mobile, currency } = req.body;
+        console.log(req.body);
+
         // Basic validation
         if (!email) {
             return res.status(400).json({
                 success: false,
-                message: "ইমেইল প্রয়োজন" // Email is required
+                message: "ইমেইল প্রয়োজন"
             });
         }
 
         if (!password || password.length < 6) {
             return res.status(400).json({
                 success: false,
-                message: "পাসওয়ার্ড কমপক্ষে ৬ অক্ষর হতে হবে" // Password must be at least 6 characters
+                message: "পাসওয়ার্ড কমপক্ষে ৬ অক্ষর হতে হবে"
+            });
+        }
+
+        // Validate mobile number if provided
+        if (mobile && !/^01[0-9]{9}$/.test(mobile)) {
+            return res.status(400).json({
+                success: false,
+                message: "সঠিক মোবাইল নম্বর দিন (বাংলাদেশি ১১ ডিজিটের নম্বর)"
             });
         }
 
@@ -1051,8 +1059,19 @@ router.post('/signup', async (req, res) => {
         if (existingUser) {
             return res.status(409).json({
                 success: false,
-                message: "এই ইমেইলটি ইতিমধ্যে ব্যবহৃত হয়েছে" // Email is already in use
+                message: "এই ইমেইলটি ইতিমধ্যে ব্যবহৃত হয়েছে"
             });
+        }
+
+        // Check if mobile already exists (if provided)
+        if (mobile) {
+            const existingMobile = await UserModel.findOne({ phone: mobile });
+            if (existingMobile) {
+                return res.status(409).json({
+                    success: false,
+                    message: "এই মোবাইল নম্বরটি ইতিমধ্যে ব্যবহৃত হয়েছে"
+                });
+            }
         }
 
         // Generate random username
@@ -1070,7 +1089,7 @@ router.post('/signup', async (req, res) => {
         if (usernameExists) {
             return res.status(500).json({
                 success: false,
-                message: "ব্যবহারকারীর নাম তৈরি করতে সমস্যা হয়েছে। দয়া করে আবার চেষ্টা করুন" // Problem generating username
+                message: "ব্যবহারকারীর নাম তৈরি করতে সমস্যা হয়েছে। দয়া করে আবার চেষ্টা করুন"
             });
         }
 
@@ -1081,29 +1100,110 @@ router.post('/signup', async (req, res) => {
             if (!referrer) {
                 return res.status(400).json({
                     success: false,
-                    message: "অবৈধ রেফারেল কোড" // Invalid referral code
+                    message: "অবৈধ রেফারেল কোড"
                 });
             }
         }
 
         // Generate numeric player ID (8 digits)
-        const player_id = Math.floor(10000000 + Math.random() * 90000000);
+        const player_id = Math.floor(10000000 + Math.random() * 90000000).toString();
 
-        // Create new user with affiliateCode
+        // Hash password
         const hashedPassword = await bcrypt.hash(password, 10);
+
+        // Create new user with all fields
         const newUser = new UserModel({
             username,
             email,
             password: hashedPassword,
-            player_id, // This will be a numeric ID like 12345678
+            phone: mobile || undefined, // Map mobile from frontend to phone in model
+            player_id,
             referralCode: 'REF' + Math.random().toString(36).substr(2, 6).toUpperCase(),
             status: 'active',
             balance: 0,
-            currency: 'BDT',
+            currency: currency || 'BDT',
             language: 'bn',
             referredBy: referrer ? referrer._id : null,
-            clickId: clickId || '', // Add clickId field, empty string if not provided
-            affiliateCode: affiliateCode || '' // Add affiliateCode field
+            clickId: clickId || '',
+            affiliateCode: affiliateCode || '',
+            // Set default values for required fields
+            isOneClickUser: false,
+            role: 'user',
+            first_login: true,
+            login_count: 0,
+            total_deposit: 0,
+            total_withdraw: 0,
+            total_bet: 0,
+            total_wins: 0,
+            total_loss: 0,
+            net_profit: 0,
+            depositamount: 0,
+            waigeringneed: 0,
+            lifetime_deposit: 0,
+            lifetime_withdraw: 0,
+            lifetime_bet: 0,
+            totalWagered: 0,
+            weeklybetamount: 0,
+            monthlybetamount: 0,
+            waigergamecategory: [],
+            withdrawalCountToday: 0,
+            withdrawalBanned: false,
+            rating: 0,
+            notes: [],
+            levelInfo: {
+                currentLevel: {
+                    name: 'Bronze',
+                    threshold: 0,
+                    achievedAt: new Date()
+                },
+                levelUpBonuses: [],
+                lifetimeLevels: []
+            },
+            bonusInfo: {
+                firstDepositBonusClaimed: false,
+                activeBonuses: [],
+                bonusWageringTotal: 0,
+                cancelledBonuses: []
+            },
+            weeklyBonus: {
+                totalBet: 0,
+                bonusAmount: 0,
+                status: 'expired'
+            },
+            monthlyBonus: {
+                totalBet: 0,
+                bonusAmount: 0,
+                status: 'expired'
+            },
+            bonusHistory: [],
+            notificationPreferences: {
+                email: true,
+                sms: false,
+                push: true
+            },
+            themePreference: 'dark',
+            isEmailVerified: false,
+            kycStatus: 'unverified',
+            kycSubmitted: false,
+            kycCompleted: false,
+            kycVerifications: [],
+            kycResubmissionCount: 0,
+            kycSubmissionHistory: [],
+            kycDocuments: [],
+            kycRejectedCount: 0,
+            kycRejections: [],
+            isPhoneVerified: false,
+            referralEarnings: 0,
+            referralCount: 0,
+            referralUsers: [],
+            referralTracking: [],
+            referralDebt: 0,
+            betHistory: [],
+            profitLossHistory: [],
+            depositHistory: [],
+            withdrawHistory: [],
+            transactionHistory: [],
+            bonusActivityLogs: []
         });
 
         await newUser.save();
@@ -1115,11 +1215,13 @@ router.post('/signup', async (req, res) => {
                 $push: { 
                     referralUsers: {
                         user: newUser._id,
-                        earnedAmount: 0
+                        earnedAmount: 0,
+                        joinedAt: new Date()
                     },
                     referralTracking: {
                         referralCodeUsed: referralCode,
-                        referredUser: newUser._id
+                        referredUser: newUser._id,
+                        timestamp: new Date()
                     }
                 }
             });
@@ -1142,7 +1244,7 @@ router.post('/signup', async (req, res) => {
                 const conversionUrl = `https://backend.affilinkly.com/api/postback?cid=${affiliateCode}&status=success&txid=${newUser._id}&payout=`;
                 
                 await axios.get(conversionUrl, {
-                    timeout: 5000, // 5 second timeout
+                    timeout: 5000,
                     headers: {
                         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
                     }
@@ -1159,7 +1261,7 @@ router.post('/signup', async (req, res) => {
                 const conversionUrl = `https://0yn0v.bemobtrcks.com/postback?cid=${clickId}&status=success&txid=${newUser._id}&payout=`;
                 
                 await axios.get(conversionUrl, {
-                    timeout: 5000, // 5 second timeout
+                    timeout: 5000,
                     headers: {
                         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
                     }
@@ -1168,8 +1270,6 @@ router.post('/signup', async (req, res) => {
                 console.log(`Conversion tracked successfully for clickId: ${clickId}`);
             } catch (conversionError) {
                 console.error('Error tracking conversion:', conversionError.message);
-                // Don't fail the registration if conversion tracking fails
-                // Just log the error and continue
             }
         }
 
@@ -1177,22 +1277,50 @@ router.post('/signup', async (req, res) => {
         const userData = newUser.toObject();
         delete userData.password;
         delete userData.otp;
+        delete userData.transactionPassword;
+        delete userData.moneyTransferPassword;
+        delete userData.twoFactorSecret;
+        delete userData.resetPasswordToken;
+        delete userData.resetPasswordExpires;
+        delete userData.passwordHistory;
 
         res.status(201).json({
             success: true,
-            message: "সফলভাবে নিবন্ধন করা হয়েছে", // Registration successful
+            message: "সফলভাবে নিবন্ধন করা হয়েছে",
             token,
             user: userData,
             referredBy: referrer ? referrer.username : null,
-            clickId: clickId || null, // Return clickId in response for confirmation
-            affiliateCode: affiliateCode || null // Return affiliateCode in response
+            clickId: clickId || null,
+            affiliateCode: affiliateCode || null
         });
 
     } catch (err) {
-        console.error(err);
+        console.error('Signup error:', err);
+        
+        // Handle duplicate key errors
+        if (err.code === 11000) {
+            const field = Object.keys(err.keyPattern)[0];
+            if (field === 'email') {
+                return res.status(409).json({
+                    success: false,
+                    message: "এই ইমেইলটি ইতিমধ্যে ব্যবহৃত হয়েছে"
+                });
+            } else if (field === 'phone') {
+                return res.status(409).json({
+                    success: false,
+                    message: "এই মোবাইল নম্বরটি ইতিমধ্যে ব্যবহৃত হয়েছে"
+                });
+            } else if (field === 'username') {
+                return res.status(409).json({
+                    success: false,
+                    message: "এই ইউজারনেম ইতিমধ্যে ব্যবহৃত হয়েছে"
+                });
+            }
+        }
+        
         res.status(500).json({
             success: false,
-            message: "সার্ভার সমস্যা হয়েছে" // Server problem
+            message: "সার্ভার সমস্যা হয়েছে"
         });
     }
 });
