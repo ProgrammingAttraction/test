@@ -35,6 +35,7 @@ app.use(cors({
     "https://admin.genzz.casino",
     "https://admin2.genzz.casino",
     "https://genzz-support.netlify.app",
+    "https://genzzv2.credixopay.com",
     "https://genzslots.com",
   ],
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
