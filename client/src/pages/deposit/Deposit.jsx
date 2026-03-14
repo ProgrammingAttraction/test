@@ -294,9 +294,9 @@ const Deposit = () => {
 
   // ─── Main UI ─────────────────────────────────────────────────────────────────
   return (
-    <div className="bg-[#C7F6FF] min-h-screen font-anek p-[30px]">
+    <div className="bg-[#C7F6FF] min-h-screen font-anek flex justify-center items-center p-[30px]">
 
-      <div className="max-w-md bg-[#F5F5F5] mx-auto p-[15px] rounded-[20px]">
+      <div className="max-w-md w-full bg-[#F5F5F5] mx-auto min-h-[93vh] p-[15px] rounded-[20px]">
 
         {/* Close Icon - Top Right */}
         <div className="flex justify-end mb-2">
@@ -448,7 +448,6 @@ const Deposit = () => {
                 <p className="text-sm font-semibold text-gray-700">
                   {t.selectBonusOffer || 'Select Bonus Offer'}
                 </p>
-                <span className="text-[10px] text-gray-400 font-medium">← scroll →</span>
               </div>
 
               {bonusLoading ? (

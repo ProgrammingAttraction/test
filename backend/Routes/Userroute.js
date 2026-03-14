@@ -213,7 +213,7 @@ user_route.post("/send-email-verification-otp", ensureAuthenticated, async (req,
             service: "gmail",
             auth: {
    user: "support@genzz.casino",
-        pass: "otzq xvpe fokg vcbq",
+        pass: "rpsu nvzi yqai wdwc",
             },
         });
 
@@ -1250,7 +1250,7 @@ user_route.post("/resend-email-verification-otp", ensureAuthenticated, async (re
             service: "gmail",
             auth: {
                 user: "support@genzz.casino",
-                pass: "vqec mvnc dlxo inca",
+                pass: "rpsu nvzi yqai wdwc",
             },
         });
 
@@ -5376,7 +5376,7 @@ user_route.post("/send-transaction-password-otp", async (req, res) => {
             service: "gmail",
             auth: {
               user: "support@genzz.casino",
-                pass: "vqec mvnc dlxo inca",
+                pass: "rpsu nvzi yqai wdwc",
             },
         });
      const mailOptions = {
@@ -5564,7 +5564,7 @@ user_route.post("/reset-transaction-password", async (req, res) => {
             service: "gmail",
             auth: {
                 user: "support@genzz.casino",
-                pass: "vqec mvnc dlxo inca",
+                pass: "rpsu nvzi yqai wdwc",
             },
         });
         const mailOptions = {

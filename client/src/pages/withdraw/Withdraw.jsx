@@ -145,7 +145,7 @@ const Withdraw = () => {
             </div>
             <h3 className="text-sm font-bold text-yellow-600 mb-2">{t.kycVerificationRequired || "KYC verification required"}</h3>
             <p className="text-gray-500 text-xs mb-4">{t.kycVerificationDesc || "Complete KYC verification to withdraw funds."}</p>
-            <button className="bg-cyan-500 hover:bg-cyan-600 text-white font-semibold py-2 px-5 rounded-lg transition-colors text-sm" onClick={() => navigate('/profile-information')}>
+            <button className="bg-cyan-500 hover:bg-cyan-600 text-white font-semibold py-2 px-5 rounded-lg transition-colors text-sm" onClick={() => navigate('/kyc')}>
               {t.completeKycVerification || "Complete KYC"}
             </button>
           </div>
@@ -278,8 +278,8 @@ const Withdraw = () => {
   const isDisabled = !amount || amount < 800 || !accountNumber || !transactionPassword || loading || hasActiveBonus || wageringStatus === 'less-than-1x' || parseFloat(amount || 0) > availableBalance;
 
   return (
-    <div className="bg-[#C7F6FF] min-h-screen font-anek p-[30px]">
-      <div className="max-w-md bg-[#F5F5F5] mx-auto p-[15px] rounded-[20px]">
+    <div className="bg-[#C7F6FF] flex justify-center items-center min-h-screen font-anek p-[30px]">
+      <div className="max-w-md w-full bg-[#F5F5F5] mx-auto p-[15px] min-h-[93vh] rounded-[20px]">
 
         {/* Close Icon - Top Right */}
         <div className="flex justify-end mb-2">

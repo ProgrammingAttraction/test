@@ -31,6 +31,7 @@ import Bonusreward from './pages/profile/bonusreward/Bonusreward'
 import KYCVerification from './pages/profile/KYCVerification'
 import CallbackPage from './pages/callback/CallbackPage'
 import KYCcallback from './pages/kyccallback/KYCcallback'
+import KYCPage from './pages/kyc/KYCPage'
 // ----------updated-------------
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -172,6 +173,11 @@ const Loader = () => {
                <Route exact path="/my-gifts" element={
           <ProtectedRoute>
             <Gitpage />
+          </ProtectedRoute>
+        } />
+                    <Route exact path="/kyc" element={
+          <ProtectedRoute>
+            <KYCPage />
           </ProtectedRoute>
         } />
               <Route exact path="/account-history" element={

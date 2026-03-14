@@ -139,7 +139,7 @@ const Profile = () => {
                 >
                     <MdArrowBackIosNew className="text-xl" />
                 </button>
-                <h1 className="text-white font-bold text-lg m-0">Profile</h1>
+                <h1 className="text-white font-bold text-lg m-0">{t.profileTitle || 'Profile'}</h1>
                 <div className="w-7"></div>
             </div>
 
@@ -246,7 +246,7 @@ const Profile = () => {
 
                     {/* Level badge top right */}
                     <div className="absolute top-3 right-3 bg-white/20 rounded-full px-3 py-0.5 text-[11px] text-white font-semibold">
-                        {levelData.currentLevel.name}
+                        {t.level || 'Level'} {levelData.currentLevel.name}
                     </div>
 
                     {/* Top row: Avatar + ID */}
@@ -255,15 +255,15 @@ const Profile = () => {
                             <div className="w-16 h-16 rounded-full bg-white/30 flex items-center justify-center overflow-hidden border-2 border-white/50">
                                 <img
                                     src={getProfileImage(userData?.username)}
-                                    alt="Profile"
+                                    alt={t.profile || 'Profile'}
                                     className="w-full h-full object-cover"
                                 />
                             </div>
                         </div>
                         <div>
-                            <div className="text-white/80 text-xs mb-0.5">Customer ID:</div>
+                            <div className="text-white/80 text-xs mb-0.5">{t.playerId || 'Customer ID'}:</div>
                             <div className="text-white font-bold text-base tracking-wide">{userData?.player_id || '123456789'}</div>
-                            <div className="text-white/70 text-[11px] mt-0.5">level {levelData.currentLevel.name}</div>
+                            <div className="text-white/70 text-[11px] mt-0.5">{t.level || 'Level'} {levelData.currentLevel.name}</div>
                         </div>
                     </div>
 
@@ -280,15 +280,15 @@ const Profile = () => {
                     {/* Balance Row */}
                     <div className="grid grid-cols-3 gap-2">
                         <div className="text-center">
-                            <div className="text-white/70 text-[10px] mb-0.5">Main Balance</div>
+                            <div className="text-white/70 text-[10px] mb-0.5">{t.mainBalance || 'Main Balance'}</div>
                             <div className="text-white font-bold text-sm">{formatBalance(userData?.balance)}</div>
                         </div>
                         <div className="text-center border-l border-r border-white/20">
-                            <div className="text-white/70 text-[10px] mb-0.5">Bonus Balance</div>
+                            <div className="text-white/70 text-[10px] mb-0.5">{t.bonusBalance || 'Bonus Balance'}</div>
                             <div className="text-white font-bold text-sm">{formatBalance(userData?.bonusBalance)}</div>
                         </div>
                         <div className="text-center">
-                            <div className="text-white/70 text-[10px] mb-0.5">Refer Bonus</div>
+                            <div className="text-white/70 text-[10px] mb-0.5">{t.referralBalance || 'Refer Bonus'}</div>
                             <div className="text-white font-bold text-sm">{formatBalance(userData?.referralEarnings)}</div>
                         </div>
                     </div>
@@ -300,7 +300,7 @@ const Profile = () => {
                         { id: 'account', label: t.account || 'Account' },
                         { id: 'transaction', label: t.transaction || 'Transaction', path: '/account-history' },
                         { id: 'bethistory', label: t.bettingHistory || 'Bet History', path: '/betting-history' },
-                        { id: 'referral', label: t.referral || 'Referral P', path: '/refer-programme' },
+                        { id: 'referral', label: t.referral || 'Referral', path: '/refer-programme' },
                     ].map((tab) => (
                         tab.path ? (
                             <NavLink
@@ -328,14 +328,14 @@ const Profile = () => {
 
                 {/* Activity & Status Section */}
                 <div className="px-3 pb-2.5">
-                    <div className="text-gray-400 text-xs font-semibold mb-2 pl-1">Activity & Status</div>
+                    <div className="text-gray-400 text-xs font-semibold mb-2 pl-1">{t.activity || 'Activity'} & {t.status || 'Status'}</div>
                     <div className="bg-[#e8e0f0] p-[10px] rounded-xl overflow-hidden ">
                       <div className='bg-white rounded-xl'>
                           {[
-                            { label: 'Name', value: userData?.username || '-', path: '/profile-information', editable: true },
-                            { label: 'Date of Birth', value: userData?.dob || '-', path: '/profile-information', locked: true },
-                            { label: 'Email', value: userData?.email || '-', path: '/profile-information', locked: true },
-                            { label: 'KYC', value: userData?.kyc_status || 'Submit KYC', path: '/profile-information', arrow: true },
+                            { label: t.username || 'Name', value: userData?.username || '-', path: '/profile-information', editable: true },
+                            { label: t.dateOfBirth || 'Date of Birth', value: userData?.dob || '-', path: '/profile-information', locked: true },
+                            { label: t.email || 'Email', value: userData?.email || '-', path: '/profile-information', locked: true },
+                            { label: t.kyc || 'KYC', value: userData?.kyc_status || t.submitKYC || 'Submit KYC', path: '/kyc', arrow: true },
                         ].map((item, i, arr) => (
                             <NavLink
                                 key={i}
@@ -357,12 +357,13 @@ const Profile = () => {
 
                 {/* Password & Security Section */}
                 <div className="px-3 py-2 pb-2.5">
-                    <div className="text-gray-400 text-xs font-semibold mb-2 pl-1">Password & Security</div>
+                    <div className="text-gray-400 text-xs font-semibold mb-2 pl-1">{t.password || 'Password'} & {t.security || 'Security'}</div>
                          <div className="bg-[#e8e0f0] p-[10px] rounded-xl overflow-hidden ">
-                      <div className='bg-white rounded-xl'>  {[
-                            { label: 'Password Update', path: '/password-information' },
-                            { label: 'Trx Password Update', path: '/mobile-information' },
-                            { label: 'Reset Trx Password', path: '/mobile-information' },
+                      <div className='bg-white rounded-xl'>  
+                          {[
+                            { label: t.passwordUpdate || 'Password Update', path: '/password-information' },
+                            { label: t.transactionPassword || 'Trx Password Update', path: '/mobile-information' },
+                            { label: t.resetTransactionPassword || 'Reset Trx Password', path: '/mobile-information' },
                         ].map((item, i, arr) => (
                             <NavLink
                                 key={i}
@@ -373,7 +374,7 @@ const Profile = () => {
                             >
                                 <span className="text-sm text-gray-800 font-medium">{item.label}</span>
                                 <div className="flex items-center gap-1.5">
-                                    <span className="text-xs text-gray-500">Edit</span>
+                                    <span className="text-xs text-gray-500">{t.edit || 'Edit'}</span>
                                     <MdArrowForwardIos className="text-gray-400 text-sm" />
                                 </div>
                             </NavLink>
@@ -383,35 +384,11 @@ const Profile = () => {
                     </div>
                 </div>
 
-                {/* More Options */}
-                <div className="px-3 py-2 pb-2.5">
-                    <div className="text-gray-400 text-xs font-semibold mb-2 pl-1">More</div>
-                              <div className="bg-[#e8e0f0] p-[10px] rounded-xl overflow-hidden ">
-                      <div className='bg-white rounded-xl'>  {[
-                            { label: t.referralProgram || 'Referral Program', path: '/refer-programme' },
-                            { label: t.bonusRewards || 'Bonus & Rewards', path: '/bonus-rewards' },
-                            { label: t.giftCenter || 'Gift Center', path: '/my-gifts' },
-                        ].map((item, i, arr) => (
-                            <NavLink
-                                key={i}
-                                to={item.path}
-                                className={`flex items-center justify-between px-4 py-3 no-underline text-inherit ${
-                                    i < arr.length - 1 ? 'border-b border-[rgba(200,190,220,0.5)]' : ''
-                                }`}
-                            >
-                                <span className="text-sm text-gray-800 font-medium">{item.label}</span>
-                                <MdArrowForwardIos className="text-gray-400 text-sm" />
-                            </NavLink>
-                        ))}
-                        </div>
-                    </div>
-                </div>
-
                 {/* Logout Button */}
                 <div className="px-3 pt-2 pb-6">
                     <button
                         onClick={handleLogoutClick}
-                        className="w-full py-3 px-4 bg-[#e8e0f0] border-none rounded-xl flex items-center justify-between cursor-pointer shadow-[0_1px_6px_rgba(0,0,0,0.07)]"
+                        className="w-full py-3 px-4 bg-[#e8e0f0] border-none rounded-xl flex items-center justify-between cursor-pointer"
                     >
                         <span className="text-sm text-red-600 font-semibold flex items-center gap-2">
                             <FaSignOutAlt /> {t.logout || 'Logout'}
