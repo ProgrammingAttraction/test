@@ -11760,7 +11760,7 @@ admin_route.get("/highlight-games/:id", async (req, res) => {
 
 // @route   PUT /api/admin/highlight-games/:id
 // @desc    Update a highlight game
-admin_route.put("/highlight-games/:id", ensureadminAuthenticated, async (req, res) => {
+admin_route.put("/highlight-games/:id",  async (req, res) => {
   try {
     const { id } = req.params;
     const { name, provider, gameId, status, imageUrl, categories, isFeatured, displayOrder } = req.body;

@@ -602,6 +602,28 @@ withdrawTitle: "উত্তোলন",
   withdrawalRestricted: "উত্তোলন সীমাবদ্ধ",
   withdrawalRestrictedDesc: "আপনার অ্যাকাউন্ট থেকে উত্তোলন সীমাবদ্ধ করা হয়েছে",
   reason: "কারণ:",
+  // For the left menu items
+loginPasswordUpdate: 'লগইন পাসওয়ার্ড আপডেট',
+transactionPasswordUpdate: 'ট্রানজেকশন পাসওয়ার্ড আপডেট',
+
+// For Login Password Update Tab
+currentPasswordRequired: 'বর্তমান পাসওয়ার্ড দিন',
+newPasswordRequired: 'নতুন পাসওয়ার্ড দিন',
+passwordUpdateSuccess: 'পাসওয়ার্ড সফলভাবে আপডেট হয়েছে',
+updatePassword: 'পাসওয়ার্ড আপডেট করুন',
+
+// For Transaction Password Update Tab
+currentTransactionPasswordRequired: 'বর্তমান ট্রানজেকশন পাসওয়ার্ড দিন',
+newTransactionPasswordRequired: 'নতুন ট্রানজেকশন পাসওয়ার্ড দিন',
+transactionPasswordLength: 'ট্রানজেকশন পাসওয়ার্ড কমপক্ষে ৪ অক্ষর হতে হবে',
+currentTransactionPassword: 'বর্তমান ট্রানজেকশন পাসওয়ার্ড',
+newTransactionPassword: 'নতুন ট্রানজেকশন পাসওয়ার্ড',
+confirmTransactionPassword: 'ট্রানজেকশন পাসওয়ার্ড নিশ্চিত করুন',
+currentTransactionPasswordPlaceholder: 'বর্তমান ট্রানজেকশন পাসওয়ার্ড লিখুন',
+newTransactionPasswordPlaceholder: 'নতুন ট্রানজেকশন পাসওয়ার্ড লিখুন',
+confirmTransactionPasswordPlaceholder: 'ট্রানজেকশন পাসওয়ার্ড নিশ্চিত করুন',
+transactionPasswordUpdateSuccess: 'ট্রানজেকশন পাসওয়ার্ড সফলভাবে আপডেট হয়েছে',
+updateTransactionPassword: 'ট্রানজেকশন পাসওয়ার্ড আপডেট করুন',
   noReasonSpecified: "কোন কারণ উল্লেখ করা হয়নি",
   banEndDate: "সীমাবদ্ধতার মেয়াদ শেষ হবে:",
   timeRemaining: "বাকি সময়:",
@@ -2165,7 +2187,28 @@ na: "N/A",
     kycSubmitted: 'KYC submitted successfully!',
     kycSubmitError: 'Failed to submit KYC',
     kycRequiredFields: 'Please fill all required fields',
-    
+    // For the left menu items
+loginPasswordUpdate: 'Login Password Update',
+transactionPasswordUpdate: 'Transaction Password Update',
+
+// For Login Password Update Tab
+currentPasswordRequired: 'Please enter current password',
+newPasswordRequired: 'Please enter new password',
+passwordUpdateSuccess: 'Password updated successfully',
+updatePassword: 'Update Password',
+
+// For Transaction Password Update Tab
+currentTransactionPasswordRequired: 'Please enter current transaction password',
+newTransactionPasswordRequired: 'Please enter new transaction password',
+transactionPasswordLength: 'Transaction password must be at least 4 characters',
+currentTransactionPassword: 'Current Transaction Password',
+newTransactionPassword: 'New Transaction Password',
+confirmTransactionPassword: 'Confirm Transaction Password',
+currentTransactionPasswordPlaceholder: 'Enter current transaction password',
+newTransactionPasswordPlaceholder: 'Enter new transaction password',
+confirmTransactionPasswordPlaceholder: 'Confirm transaction password',
+transactionPasswordUpdateSuccess: 'Transaction password updated successfully',
+updateTransactionPassword: 'Update Transaction Password',
     // Document Upload
     uploadDocuments: 'Upload Documents',
     selectDocument: 'Select Document Type',

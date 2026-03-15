@@ -31,14 +31,6 @@ const HighlightGamesSchema = new mongoose.Schema(
       type: [String],
       default: [],
     },
-    isFeatured: {
-      type: Boolean,
-      default: false,
-    },
-    displayOrder: {
-      type: Number,
-      default: 0,
-    },
     createdAt: {
       type: Date,
       default: Date.now,

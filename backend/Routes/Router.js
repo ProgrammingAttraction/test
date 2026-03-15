@@ -4,6 +4,7 @@ const Noticemodel = require("../Models/Noticemodel");
 const Categorymodel = require("../Models/CategoryModel");
 const GameModel = require("../Models/GameModel");
 const Providermodel = require("../Models/Providermodel");
+const HighlightGamesModel = require("../Models/HighlightGamesModel");
 const Router=express.Router();
 
 Router.get("/all-sliders",async(req,res)=>{
@@ -115,4 +116,26 @@ Router.get("/all-providers", async (req, res) => {
     res.status(500).json({ message: "Internal server error." });
   }
 });
+
+
+Router.get("/highlight-games", async (req, res) => {
+  try {
+    // Get only active highlight games
+    const highlightGames = await HighlightGamesModel.find({ status: "active" }).sort({ name: 1 });
+
+    res.status(200).json({
+      success: true,
+      count: highlightGames.length,
+      data: highlightGames,
+    });
+  } catch (error) {
+    console.error("Error fetching highlight games:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+});
+
+
 module.exports=Router;
