@@ -2462,7 +2462,7 @@ const KYCTabContent = () => {
   // ─────────────────────────────────────────────────────────────────────────
   if (showEmailOTPInput && !emailVerificationStatus.isVerified) {
     return (
-      <div className="min-h-screen bg-gray-100 font-anek flex items-center justify-center px-6">
+      <div className="font-anek flex items-center justify-center px-6">
         <Toaster position="top-right" toastOptions={{ style: { borderRadius: 10, fontSize: 14 } }} />
 
         <div
@@ -2531,7 +2531,7 @@ const KYCTabContent = () => {
   // ─────────────────────────────────────────────────────────────────────────
   if (!showTabs) {
     return (
-      <div className="min-h-screen bg-[#C7F6FF] font-anek flex items-center justify-center px-6">
+      <div className=" font-anek flex items-center justify-center px-6">
         <Toaster position="top-right" toastOptions={{ style: { borderRadius: 10, fontSize: 14 } }} />
         <div className="relative bg-white rounded-2xl p-8 text-center shadow-sm border border-gray-200 w-full max-w-sm">
           <button
