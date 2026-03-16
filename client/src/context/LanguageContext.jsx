@@ -185,7 +185,7 @@ const translations = {
     kycSubmitted: 'KYC সফলভাবে জমা দেওয়া হয়েছে!',
     kycSubmitError: 'KYC জমা দিতে ব্যর্থ',
     kycRequiredFields: 'দয়া করে সব আবশ্যক ফিল্ড পূরণ করুন',
-    
+    kyc:"KYC যাচাইকরণ",
     // Document Upload
     uploadDocuments: 'ডকুমেন্ট আপলোড',
     selectDocument: 'ডকুমেন্ট টাইপ নির্বাচন করুন',
@@ -213,8 +213,6 @@ const translations = {
     // Tabs
     profile: 'প্রোফাইল',
     emailVerification: 'ইমেইল যাচাই',
-    kyc: 'KYC',
-
     // Username Update
     usernameUpdateSuccess: 'ইউজারনেম সফলভাবে আপডেট হয়েছে',
     usernameUpdateError: 'ইউজারনেম আপডেট করতে ব্যর্থ',

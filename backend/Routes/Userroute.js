@@ -38,15 +38,16 @@ const BONUS_CONFIG = {
 };
 
 // ----------------- Update Username -----------------
+// ----------------- Update Username -----------------
 user_route.put("/update-username", ensureAuthenticated, async (req, res) => {
     try {
-        const { userId, newUsername, password } = req.body;
+        const { userId, newUsername } = req.body;
 
         // ইনপুট ভ্যালিডেশন
-        if (!newUsername || !password) {
+        if (!newUsername) {
             return res.status(400).json({
                 success: false,
-                message: "নতুন ইউজারনেম এবং পাসওয়ার্ড অবশ্যই প্রয়োজন"
+                message: "নতুন ইউজারনেম অবশ্যই প্রয়োজন" // New username is required
             });
         }
 
@@ -54,25 +55,17 @@ user_route.put("/update-username", ensureAuthenticated, async (req, res) => {
         if (!/^[a-zA-Z0-9_]{4,20}$/.test(newUsername)) {
             return res.status(400).json({
                 success: false,
-                message: "ইউজারনেম অবশ্যই ৪-২০ ক্যারেক্টারের হতে হবে এবং শুধুমাত্র ইংরেজি অক্ষর, সংখ্যা এবং আন্ডারস্কোর ব্যবহার করা যাবে"
+                message: "ইউজারনেম অবশ্যই ৪-২০ ক্যারেক্টারের হতে হবে এবং শুধুমাত্র ইংরেজি অক্ষর, সংখ্যা এবং আন্ডারস্কোর ব্যবহার করা যাবে" 
+                // Username must be 4-20 characters and can only contain letters, numbers and underscore
             });
         }
 
-        // পাসওয়ার্ড সহ ইউজার খুঁজুন
-        const user = await UserModel.findById(userId).select('+password');
+        // ইউজার খুঁজুন
+        const user = await UserModel.findById(userId);
         if (!user) {
             return res.status(404).json({
                 success: false,
-                message: "ইউজার খুঁজে পাওয়া যায়নি"
-            });
-        }
-
-        // পাসওয়ার্ড ভেরিফাই করুন
-        const isPasswordValid = await bcrypt.compare(password, user.password);
-        if (!isPasswordValid) {
-            return res.status(401).json({
-                success: false,
-                message: "পাসওয়ার্ড ভুল হয়েছে"
+                message: "ইউজার খুঁজে পাওয়া যায়নি" // User not found
             });
         }
 
@@ -81,18 +74,37 @@ user_route.put("/update-username", ensureAuthenticated, async (req, res) => {
         if (existingUser && existingUser._id.toString() !== userId) {
             return res.status(400).json({
                 success: false,
-                message: "এই ইউজারনেম ইতিমধ্যে নেওয়া হয়েছে"
+                message: "এই ইউজারনেম ইতিমধ্যে নেওয়া হয়েছে" // This username is already taken
             });
         }
 
         // ইউজারনেম আপডেট করুন
         const oldUsername = user.username;
         user.username = newUsername;
+        
+        // Add to transaction history for audit (optional)
+        if (user.transactionHistory) {
+            user.transactionHistory.push({
+                type: 'profile_update',
+                amount: 0,
+                balanceBefore: user.balance,
+                balanceAfter: user.balance,
+                description: 'Username updated',
+                referenceId: `USERNAMEUPDATE-${Date.now()}`,
+                createdAt: new Date(),
+                details: {
+                    field: 'username',
+                    oldValue: oldUsername,
+                    newValue: newUsername
+                }
+            });
+        }
+
         await user.save();
 
         res.status(200).json({
             success: true,
-            message: "ইউজারনেম সফলভাবে আপডেট হয়েছে",
+            message: "ইউজারনেম সফলভাবে আপডেট হয়েছে", // Username updated successfully
             data: {
                 oldUsername,
                 newUsername
@@ -103,8 +115,229 @@ user_route.put("/update-username", ensureAuthenticated, async (req, res) => {
         console.error("ইউজারনেম আপডেট করতে সমস্যা:", error);
         res.status(500).json({
             success: false,
-            message: "ইউজারনেম আপডেট করতে ব্যর্থ হয়েছে",
+            message: "ইউজারনেম আপডেট করতে ব্যর্থ হয়েছে", // Failed to update username
             error: error.message
+        });
+    }
+});
+// ----------------- Update Date of Birth -----------------
+user_route.put("/update-dob", ensureAuthenticated, async (req, res) => {
+    try {
+        const { userId, dateOfBirth } = req.body;
+
+        // Validate input
+        if (!userId || !dateOfBirth) {
+            return res.status(400).json({
+                success: false,
+                message: "ব্যবহারকারী আইডি এবং জন্ম তারিখ প্রয়োজন" // User ID and date of birth are required
+            });
+        }
+
+        // Validate date format and validity
+        const dobDate = new Date(dateOfBirth);
+        if (isNaN(dobDate.getTime())) {
+            return res.status(400).json({
+                success: false,
+                message: "অনুগ্রহ করে একটি বৈধ তারিখ লিখুন" // Please enter a valid date
+            });
+        }
+
+        // Check if date is not in future
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        if (dobDate > today) {
+            return res.status(400).json({
+                success: false,
+                message: "জন্ম তারিখ ভবিষ্যতের হতে পারবে না" // Date of birth cannot be in the future
+            });
+        }
+
+        // Check if user is at least 18 years old (optional - depending on your requirements)
+        const minAgeDate = new Date();
+        minAgeDate.setFullYear(minAgeDate.getFullYear() - 18);
+        
+        if (dobDate > minAgeDate) {
+            return res.status(400).json({
+                success: false,
+                message: "আপনার বয়স কমপক্ষে ১৮ বছর হতে হবে" // You must be at least 18 years old
+            });
+        }
+
+        // Find user
+        const user = await UserModel.findById(userId);
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: "ব্যবহারকারী খুঁজে পাওয়া যায়নি" // User not found
+            });
+        }
+
+        // Check if user is trying to update date of birth multiple times
+        if (user.dateOfBirth) {
+            // Optional: Log that user is updating existing DOB
+            console.log(`User ${userId} updating date of birth from ${user.dateOfBirth} to ${dateOfBirth}`);
+        }
+
+        // Store old date of birth for logging/audit
+        const oldDateOfBirth = user.dateOfBirth;
+
+        // Update user's date of birth
+        user.dateOfBirth = dobDate;
+
+        // Also update in kycInfo if it exists (for consistency)
+        if (user.kycInfo) {
+            user.kycInfo.dateOfBirth = dobDate;
+        }
+
+        // Add to transaction history for audit trail (optional)
+        user.transactionHistory.push({
+            type: 'profile_update',
+            amount: 0,
+            balanceBefore: user.balance,
+            balanceAfter: user.balance,
+            description: 'Date of birth updated',
+            referenceId: `DOBUPDATE-${Date.now()}`,
+            createdAt: new Date(),
+            details: {
+                field: 'dateOfBirth',
+                oldValue: oldDateOfBirth,
+                newValue: dobDate
+            }
+        });
+
+        // Add to user notes for audit (optional)
+        if (!user.notes) {
+            user.notes = [];
+        }
+        user.notes.push({
+            note: `Date of birth updated from ${oldDateOfBirth ? oldDateOfBirth.toISOString().split('T')[0] : 'Not set'} to ${dobDate.toISOString().split('T')[0]}`,
+            createdAt: new Date(),
+            createdBy: "User"
+        });
+
+        // Save user changes
+        await user.save();
+
+        // Log the update
+        console.log(`Date of birth updated successfully for user ${userId}`);
+
+        // Format response date for frontend
+        const formattedDate = dobDate.toISOString().split('T')[0];
+
+        res.status(200).json({
+            success: true,
+            message: "জন্ম তারিখ সফলভাবে আপডেট হয়েছে", // Date of birth updated successfully
+            data: {
+                oldDateOfBirth: oldDateOfBirth ? oldDateOfBirth.toISOString().split('T')[0] : null,
+                newDateOfBirth: formattedDate,
+                updatedAt: new Date()
+            }
+        });
+
+    } catch (error) {
+        console.error("জন্ম তারিখ আপডেট করতে সমস্যা:", error); // Error updating date of birth
+        res.status(500).json({
+            success: false,
+            message: "জন্ম তারিখ আপডেট করতে ব্যর্থ হয়েছে", // Failed to update date of birth
+            error: error.message
+        });
+    }
+});
+
+// Update Transaction Password
+user_route.put("/update-transaction-password", ensureAuthenticated, async (req, res) => {
+    try {
+        const { userId, currentPassword, newPassword } = req.body;
+
+        // Find user and explicitly select transactionPassword
+        const user = await UserModel.findById(userId).select('+transactionPassword');
+        if (!user) {
+            return res.status(404).json({ 
+                success: false, 
+                message: "ব্যবহারকারী খুঁজে পাওয়া যায়নি" 
+            });
+        }
+        
+        // Check if user has transaction password set
+        if (!user.transactionPassword) {
+            return res.status(400).json({ 
+                success: false, 
+                message: "ট্রানজেকশন পাসওয়ার্ড সেট আপ করা হয়নি" 
+            });
+        }
+
+        // Verify current transaction password using the method
+        const isMatch = await user.verifyTransactionPassword(currentPassword);
+        if (!isMatch) {
+            return res.status(400).json({ 
+                success: false, 
+                message: "বর্তমান ট্রানজেকশন পাসওয়ার্ড ভুল" 
+            });
+        }
+
+        // Hash new password
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+        // Update password
+        user.transactionPassword = hashedPassword;
+        await user.save();
+
+        res.status(200).json({ 
+            success: true, 
+            message: "ট্রানজেকশন পাসওয়ার্ড সফলভাবে আপডেট করা হয়েছে" 
+        });
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ 
+            success: false, 
+            message: "সার্ভার সমস্যা" 
+        });
+    }
+});
+// Update Account Password
+user_route.put("/update-account-password", ensureAuthenticated, async (req, res) => {
+    try {
+        const { userId, currentPassword, newPassword } = req.body;
+
+        // Find user with password
+        const user = await UserModel.findById(userId).select('+password');
+        if (!user) {
+            return res.status(404).json({ 
+                success: false, 
+                message: "ব্যবহারকারী খুঁজে পাওয়া যায়নি" 
+            });
+        }
+
+        // Verify current password
+        const isMatch = await bcrypt.compare(currentPassword, user.password);
+        if (!isMatch) {
+            return res.status(400).json({ 
+                success: false, 
+                message: "বর্তমান পাসওয়ার্ডটি ভুল" 
+            });
+        }
+
+        // Hash new password
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+        // Update password
+        user.password = hashedPassword;
+        await user.save();
+
+        res.status(200).json({ 
+            success: true, 
+            message: "অ্যাকাউন্ট পাসওয়ার্ড সফলভাবে আপডেট করা হয়েছে" 
+        });
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ 
+            success: false, 
+            message: "সার্ভার সমস্যা" 
         });
     }
 });

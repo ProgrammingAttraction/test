@@ -915,10 +915,10 @@ const Header = ({ setShowPopup, setActiveLeftTab, showPopup, activeLeftTab }) =>
           ) : (
             <>
               {/* Balance Box */}
-              <div className="flex flex-col gap-1.5 border border-[#BDE3F0] rounded-[15px] p-2 bg-transparent">
+              <div className="flex flex-col md:flex-row gap-1.5 md:gap-2.5 border border-[#BDE3F0] rounded-[15px] p-2 bg-transparent">
                 <div className="flex items-center gap-2">
                   <FaBangladeshiTakaSign className="text-[#BBB] text-[16px] ml-0.5" />
-                  <div className="bg-white px-4 rounded-full border border-gray-100 w-[90px] md:w-[120px] text-center">
+                  <div className="bg-white px-4 md:py-1 rounded-full border border-gray-100 w-[90px] md:w-[120px] text-center">
                     <span className="text-[#555] text-[12px] md:text-sm font-medium">
                       {userData?.balance?.toFixed(2) || "1000.00"}
                     </span>
@@ -926,8 +926,8 @@ const Header = ({ setShowPopup, setActiveLeftTab, showPopup, activeLeftTab }) =>
                 </div>
                 <div className="flex items-center gap-2">
                   <FaMoneyBillAlt className="text-[#BBB] text-[16px] ml-0.5" />
-                  <div className="bg-white px-4 rounded-full border border-gray-100 w-[90px] md:w-[120px] text-center">
-                    <span className="text-[#555] text-[12px] md:text-sm font-medium">
+                  <div className="bg-white px-4 md:py-1 rounded-full border border-gray-100 w-[90px] md:w-[120px] text-center">
+                    <span className="text-[#555]  text-[12px] md:text-[14px] font-medium">
                       {userData?.bonusBalance?.toFixed(2) || "100000.00"}
                     </span>
                   </div>
@@ -938,9 +938,9 @@ const Header = ({ setShowPopup, setActiveLeftTab, showPopup, activeLeftTab }) =>
               <div className="relative group">
                 <button
                   onClick={toggleProfileDropdown}
-                  className="items-center md:flex hidden justify-center w-11 h-11 md:w-14 md:h-14 rounded-full border-[1.5px] border-[#888] hover:border-cyan-400 transition-all bg-transparent"
+                  className="items-center md:flex hidden justify-center w-11 h-11 md:w-12 md:h-12 rounded-full border-[1.5px] border-[#888] hover:border-cyan-400 transition-all bg-transparent"
                 >
-                  <FaUser className="text-[#89E3F5] text-2xl md:text-3xl" />
+                  <FaUser className="text-[#89E3F5] text-2xl md:text-2xl" />
                 </button>
                 <NavLink
                   to="/profile"
@@ -950,7 +950,7 @@ const Header = ({ setShowPopup, setActiveLeftTab, showPopup, activeLeftTab }) =>
                 </NavLink>
 
                 {profileDropdownOpen && (
-                  <div className="absolute right-0 top-full mt-3 w-64 bg-white rounded-lg shadow-xl z-[110] border border-gray-100 overflow-hidden">
+                  <div className="absolute right-0 top-full mt-3 w-64 bg-white rounded-lg shadow-xl z-[110] border border-gray-200 overflow-hidden">
                     <div className="px-4 py-4 bg-gray-50 border-b border-gray-100">
                       <p className="text-gray-800 font-bold truncate">{userData?.username || "Guest User"}</p>
                       <p className="text-cyan-600 text-xs font-medium">Account ID: {userData?._id?.slice(-6)}</p>

@@ -255,7 +255,10 @@ const UserSchema = new Schema({
         type: Date,
         default: null
     },
-
+dateOfBirth:{
+     type: Date,
+        default: null
+},
     // ========== SIMPLE RATING & NOTES ==========
     rating: {
         type: Number,
