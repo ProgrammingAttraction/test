@@ -1,0 +1,23 @@
+<svg id="Component_19_1" data-name="Component 19 – 1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="10.215" height="12.335" viewBox="0 0 10.215 12.335">
+  <defs>
+    <radialGradient id="radial-gradient" cx="0.5" cy="0.5" r="0.473" gradientUnits="objectBoundingBox">
+      <stop offset="0" stop-color="#00f9fc"/>
+      <stop offset="1" stop-color="#0081fc"/>
+    </radialGradient>
+    <radialGradient id="radial-gradient-2" cx="0.367" cy="-0.096" r="1.387" gradientUnits="objectBoundingBox">
+      <stop offset="0" stop-color="#fff"/>
+      <stop offset="1" stop-color="#b1c6f2"/>
+    </radialGradient>
+    <radialGradient id="radial-gradient-3" cx="0.15" cy="-0.306" r="2.432" gradientUnits="objectBoundingBox">
+      <stop offset="0" stop-color="#fff"/>
+      <stop offset="1"/>
+    </radialGradient>
+    <radialGradient id="radial-gradient-4" cx="0.008" cy="0.002" r="1.212" xlink:href="#radial-gradient"/>
+  </defs>
+  <path id="Path_77" data-name="Path 77" d="M-128.359,84.16l4.334,2.5a.552.552,0,0,0,.753-.2l3.169-5.489h0l.943-1.633a.553.553,0,0,0-.2-.753l-4.334-2.5a.553.553,0,0,0-.753.2l-2.851,4.938h0l-1.261,2.185A.553.553,0,0,0-128.359,84.16Z" transform="translate(129.302 -74.401)" fill-rule="evenodd" fill="url(#radial-gradient)"/>
+  <g id="Group_20" data-name="Group 20">
+    <path id="Path_78" data-name="Path 78" d="M-125.829,70.948l4.334,2.5a.553.553,0,0,1,.2.753l-4.112,7.122a.553.553,0,0,1-.753.2l-4.334-2.5a.553.553,0,0,1-.2-.753l4.112-7.122a.552.552,0,0,1,.753-.2Z" transform="translate(130.767 -70.875)" fill-rule="evenodd" fill="url(#radial-gradient-2)"/>
+    <path id="Path_79" data-name="Path 79" d="M-118.57,73.45l-4.334-2.5a.552.552,0,0,0-.753.2l-2.851,4.938,7.2-.251.943-1.633a.553.553,0,0,0-.2-.753Z" transform="translate(127.842 -70.875)" fill-rule="evenodd" fill="url(#radial-gradient-3)" style="mix-blend-mode: screen;isolation: isolate"/>
+  </g>
+  <path id="Union_1" data-name="Union 1" d="M1.391,9.078a.325.325,0,0,1-.242-.27.325.325,0,0,1-.354-.075.293.293,0,0,1,.017-.384.815.815,0,0,1,.683-.208.09.09,0,0,1,.06.035.815.815,0,0,1,.162.695.307.307,0,0,1-.272.213A.244.244,0,0,1,1.391,9.078Zm-.548-3.2a.312.312,0,0,1-.206-.119A2.766,2.766,0,0,1,.091,3.4a1,1,0,0,1,1.1-.7,1.1,1.1,0,0,1,.822.913,1.1,1.1,0,0,1,1.2.256,1,1,0,0,1-.057,1.3A2.631,2.631,0,0,1,1.231,5.9,2.664,2.664,0,0,1,.843,5.878ZM1.462.942A.093.093,0,0,1,1.4.908.817.817,0,0,1,1.24.213.294.294,0,0,1,1.564.006a.325.325,0,0,1,.242.269A.325.325,0,0,1,2.161.35a.293.293,0,0,1-.017.384A.775.775,0,0,1,1.576.95.788.788,0,0,1,1.462.942Z" transform="translate(3.296 0.821)" fill="url(#radial-gradient-4)"/>
+</svg>

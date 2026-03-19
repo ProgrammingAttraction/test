@@ -32,6 +32,8 @@ import KYCVerification from './pages/profile/KYCVerification'
 import CallbackPage from './pages/callback/CallbackPage'
 import KYCcallback from './pages/kyccallback/KYCcallback'
 import KYCPage from './pages/kyc/KYCPage'
+import TransactionPassword from './pages/profile/transactionpassword/TransactionPassword'
+import TransactionPasswordReset from './pages/profile/passwordreset/TransactionPasswordReset'
 // ----------updated-------------
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -168,6 +170,18 @@ const Loader = () => {
              <Route exact path="/password-information" element={
           <ProtectedRoute>
             <PasswordInformation />
+          </ProtectedRoute>
+        } />
+
+                 <Route exact path="/trx-password-update" element={
+          <ProtectedRoute>
+            <TransactionPassword />
+          </ProtectedRoute>
+        } />
+
+                      <Route exact path="/reset-trx-password" element={
+          <ProtectedRoute>
+            <TransactionPasswordReset />
           </ProtectedRoute>
         } />
                <Route exact path="/my-gifts" element={

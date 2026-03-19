@@ -197,10 +197,10 @@ const ProviderTabs = ({ providers, selectedProvider, setSelectedProvider, t }) =
           <button
             key={provider._id}
             onClick={() => setSelectedProvider(provider.providerName)}
-            className={`flex-shrink-0 flex items-center cursor-pointer gap-2 px-4 py-2 md:py-1 rounded-[5px] text-sm font-medium transition-all ${
+        className={`flex-shrink-0 flex items-center cursor-pointer gap-2 border-[1px] px-4 py-2 md:py-1 rounded-[5px] text-sm font-medium transition-all ${
               selectedProvider === provider.providerName 
-                ? 'bg-theme_color2 text-white shadow-lg' 
-                : 'bg-gray-700 text-gray-700'
+                ? 'bg-theme_color2 text-white shadow-lg   border-teal-500 ' 
+                : 'bg-gray-50 text-theme_color2 border-gray-200'
             }`}
           >
             {provider.imageUrl && (

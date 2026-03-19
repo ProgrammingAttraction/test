@@ -653,7 +653,7 @@ const Header = ({ setShowPopup, setActiveLeftTab, showPopup, activeLeftTab }) =>
         }}
         className="flex items-center bg-white rounded-r-[25px] gap-4 px-3 py-2 text-gray-800 cursor-pointer transition-colors"
       >
-        <img src={item.icon} className='text-[20px] w-[22px] pl-[6px]' />
+        <img src={item.icon} className='text-[20px] pl-[6px]' />
         <span className="font-[500]">{item.label}</span>
       </NavLink>
     ));
@@ -1204,7 +1204,7 @@ const Header = ({ setShowPopup, setActiveLeftTab, showPopup, activeLeftTab }) =>
 
       {/* ─── SIDEBAR ─── */}
       <div className={`fixed inset-0 z-[10000] transform transition-transform duration-300 ease-in-out ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} xl:hidden`}>
-        <div className="bg-gray-100 h-full w-4/5 max-w-xs overflow-y-auto border-r border-gray-800 flex flex-col">
+        <div className="bg-[#98E1EE]/80 h-full w-4/5 max-w-xs overflow-y-auto border-r border-gray-800 flex flex-col">
           <div className="p-4 py-[30px] flex items-center justify-between">
             <img className='w-[100px]' src={logo} alt="" />
             <button onClick={closeSidebar} className="text-gray-600 hover:text-gray-900 text-[24px] cursor-pointer transition-colors">

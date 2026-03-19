@@ -15,10 +15,9 @@ import {
 } from 'react-icons/fa';
 import { IoIosArrowDown } from "react-icons/io";
 import { LuWallet } from "react-icons/lu";
-import { PiMoneyBold } from "react-icons/pi";
+
 import { FaSyncAlt } from "react-icons/fa";
 import { RiMenuFold2Line } from "react-icons/ri";
-import { PiCoinsBold } from "react-icons/pi";
 import axios from 'axios';
 import toast, { Toaster } from 'react-hot-toast';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
@@ -55,7 +54,6 @@ import {
   FaLink,
   FaQuestionCircle
 } from 'react-icons/fa';
-import { MdOutlineCasino } from "react-icons/md";
 import { PiMoneyWavy } from "react-icons/pi";
 import { FaBangladeshiTakaSign } from "react-icons/fa6";
 import { FaUserCircle } from "react-icons/fa";
@@ -79,7 +77,6 @@ import sideicon2 from "../../assets/sidebar_icon/img2.svg"
 import sideicon3 from "../../assets/sidebar_icon/img3.svg"
 import sideicon4 from "../../assets/sidebar_icon/img4.svg"
 import sideicon5 from "../../assets/sidebar_icon/img5.svg"
-import sideicon6 from "../../assets/sidebar_icon/img12.svg"
 // -------------------bottom-navbar-----------------------
 import menu1 from "../../assets/bottom_navbar/menu1.png"
 import menu2 from "../../assets/bottom_navbar/menu2.png"
@@ -277,9 +274,9 @@ const Header = ({ setShowPopup, setActiveLeftTab, showPopup, activeLeftTab }) =>
       requiresAuth: true
     },
     {
-      id: 'slots',
-      label: 'Slots',
-      path: '/slot-games',
+      id: 'sports',
+      label: 'Sports',
+      path: '/sports',
       icon: menu2,
       activeIcon: <GiSoccerBall className="w-5 h-5 text-green-400" />,
       requiresAuth: true
@@ -639,7 +636,6 @@ const Header = ({ setShowPopup, setActiveLeftTab, showPopup, activeLeftTab }) =>
     { icon: sideicon2, label: t.provider, path: '/provider' },
     { icon: sideicon4, label: t.affiliate, path: '/affiliate-programme' },
     { icon: sideicon1, label: t.vipClub, path: '/vip-club' },
-      { icon: sideicon6, label: t.bonusHub || 'Bonus Hub', path: '/bonus-hub' },
   ];
 
   const renderMenuItems = () => {
@@ -653,7 +649,7 @@ const Header = ({ setShowPopup, setActiveLeftTab, showPopup, activeLeftTab }) =>
         }}
         className="flex items-center bg-white rounded-r-[25px] gap-4 px-3 py-2 text-gray-800 cursor-pointer transition-colors"
       >
-        <img src={item.icon} className='text-[20px] w-[22px] pl-[6px]' />
+        <img src={item.icon} className='text-[20px] pl-[6px]' />
         <span className="font-[500]">{item.label}</span>
       </NavLink>
     ));
@@ -1204,7 +1200,7 @@ const Header = ({ setShowPopup, setActiveLeftTab, showPopup, activeLeftTab }) =>
 
       {/* ─── SIDEBAR ─── */}
       <div className={`fixed inset-0 z-[10000] transform transition-transform duration-300 ease-in-out ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} xl:hidden`}>
-        <div className="bg-gray-100 h-full w-4/5 max-w-xs overflow-y-auto border-r border-gray-800 flex flex-col">
+        <div className="bg-[#98E1EE]/80 h-full w-4/5 max-w-xs overflow-y-auto border-r border-gray-800 flex flex-col">
           <div className="p-4 py-[30px] flex items-center justify-between">
             <img className='w-[100px]' src={logo} alt="" />
             <button onClick={closeSidebar} className="text-gray-600 hover:text-gray-900 text-[24px] cursor-pointer transition-colors">
@@ -1258,79 +1254,53 @@ const Header = ({ setShowPopup, setActiveLeftTab, showPopup, activeLeftTab }) =>
       </div>
 
       {/* ─── BOTTOM NAVBAR ─── */}
-{/* ─── BOTTOM NAVBAR ─── */}
-<div className='w-full fixed bottom-0 left-1/2 -translate-x-1/2 z-50'>
-  <nav className="w-full md:hidden">
-    <div className="relative w-full h-16 bg-gray-50 shadow-[0_-5px_15px_rgba(0,0,0,0.1)] border border-white/50 backdrop-blur-sm">
-      <div className="flex justify-around items-center h-full">
-        {/* Search Button */}
-        <button
-          onClick={() => setShowSearchPopup(true)}
-          className="flex-1 flex flex-col items-center justify-center h-full relative transition-all duration-300 text-gray-500"
-        >
-          <div className="text-2xl">
-            <FaSearch className="w-5 h-5" />
-          </div>
-          <span className="text-[10px] font-bold uppercase tracking-wide mt-1">Search</span>
-        </button>
-        
-        {navItems.filter(item => item.id !== 'home').map((item) => (
-          item.id === 'livechat' ? (
-            <a
-              key={item.id}
-              href="https://tawk.to/chat/68a35260fcd547192dde87ce/1j6ibcsl1"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex-1 flex flex-col items-center justify-center h-full relative transition-all duration-300 text-gray-500 hover:text-theme_color2"
-            >
-              <div className="text-2xl transition-transform duration-300 hover:scale-110">
-                <FiMessageCircle className="w-6 h-6" />
-              </div>
-              <span className="text-[10px] font-bold uppercase tracking-wide mt-1">
-                {item.label}
-              </span>
-            </a>
-          ) : (
-            <NavLink
-              key={item.id}
-              to={item.path}
-              onClick={handleNavItemClick(item)}
-              className={({ isActive }) =>
-                `flex-1 flex flex-col items-center justify-center h-full relative transition-all duration-300 ${
-                  isActive ? 'text-theme_color2' : 'text-gray-500'
-                }`
-              }
-            >
-              {({ isActive }) => (
-                <>
-                  {isCenterItem(item) ? (
-                    // Center icon - elevated with border (EXACTLY AS BEFORE, but with React icon)
-                    <div className="absolute -top-4 w-14 h-14 rounded-full flex p-[2px] items-center justify-center transition-all duration-300 transform shadow-[0_4px_15px_rgba(0,0,0,0.2)] bg-white border-[1px] border-theme_color2">
-                      <PiMoneyBold  className="w-7 h-7 text-theme_color2" />
-                    </div>
-                  ) : (
+      <div className='w-full fixed bottom-0 left-1/2 -translate-x-1/2 z-50'>
+        <nav className="w-full md:hidden">
+          <div className="relative w-full h-16 bg-gray-50 shadow-[0_-5px_15px_rgba(0,0,0,0.1)] border border-white/50 backdrop-blur-sm">
+            <div className="flex justify-around items-center h-full">
+              <button
+                onClick={() => setShowSearchPopup(true)}
+                className="flex-1 flex flex-col items-center justify-center h-full relative transition-all duration-300 text-gray-500"
+              >
+                <div className="text-2xl"><FaSearch className="w-5 h-5" /></div>
+                <span className="text-[10px] font-bold uppercase tracking-wide mt-1">Search</span>
+              </button>
+              {navItems.filter(item => item.id !== 'home').map((item) => (
+                <NavLink
+                  key={item.id}
+                  to={item.path}
+                  onClick={handleNavItemClick(item)}
+                  className={({ isActive }) =>
+                    `flex-1 flex flex-col items-center justify-center h-full relative transition-all duration-300 ${isActive ? 'text-[#EAB308]' : 'text-gray-500'}`
+                  }
+                >
+                  {({ isActive }) => (
                     <>
-                      <div className={`text-2xl transition-transform duration-300 ${isActive ? 'scale-110' : 'scale-100'}`}>
-                        {item.id === 'casino' && <FaCoins className="w-6 h-6" />}
-                        {item.id === 'slots' && <MdOutlineCasino  className="w-6 h-6" />}
-                      </div>
-                      <span className={`text-[10px] font-bold uppercase tracking-wide mt-1 transition-colors duration-300`}>
-                        {item.label}
-                      </span>
-                      {isActive && (
-                        <div className="absolute bottom-1 w-1 h-1 bg-theme_color2 rounded-full shadow-[0_0_8px_#0FD9F1]"></div>
+                      {isCenterItem(item) ? (
+                        <div className="absolute -top-6 w-14 h-14 rounded-full flex p-[2px] items-center justify-center transition-all duration-300 transform shadow-[0_4px_15px_rgba(0,0,0,0.2)] bg-white border-[1px] border-theme_color2">
+                          <img src={item.icon} alt="" />
+                        </div>
+                      ) : (
+                        <>
+                          <div className={`text-2xl transition-transform duration-300 ${isActive ? 'scale-110' : 'scale-100'}`}>
+                            <img src={item.icon} alt="" />
+                          </div>
+                          <span className={`text-[10px] font-bold uppercase tracking-wide mt-1 transition-colors duration-300`}>
+                            {item.label}
+                          </span>
+                          {isActive && (
+                            <div className="absolute bottom-1 w-1 h-1 bg-[#EAB308] rounded-full shadow-[0_0_8px_#EAB308]"></div>
+                          )}
+                        </>
                       )}
                     </>
                   )}
-                </>
-              )}
-            </NavLink>
-          )
-        ))}
+                </NavLink>
+              ))}
+            </div>
+          </div>
+        </nav>
       </div>
-    </div>
-  </nav>
-</div>
 
       {showAuthModal && (
         <div

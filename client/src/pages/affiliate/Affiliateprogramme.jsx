@@ -103,7 +103,7 @@ const Affiliateprogramme = () => {
         </div>
 
         <div className="ml-0 md:ml-[330px] flex-1 p-4 sm:p-6 md:p-8 lg:p-10 overflow-y-auto">
-          <div className="max-w-7xl mx-auto">
+          <div className="w-full mx-auto">
             {/* Language Toggle Button */}
             <div className="flex justify-end mb-4">
               <button

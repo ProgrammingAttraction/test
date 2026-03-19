@@ -153,72 +153,6 @@ const Gamepage = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  // Self-validation function using Axios
-  // const handleSelfValidation = async () => {
-  //   if (!sessionId) {
-  //     setValidationStatus({
-  //       success: false,
-  //       message: "No active session found for validation"
-  //     });
-  //     return;
-  //   }
-
-  //   setValidating(true);
-  //   setValidationStatus(null);
-
-  //   try {
-  //     // Using Axios for the API call
-  //     const response = await axios.post(
-  //       `${API_BASE_URL}/api/games/self-validate`,
-  //       `session_id=${sessionId}`,
-  //       {
-  //         headers: {
-  //           "Content-Type": "application/x-www-form-urlencoded",
-  //           "X-Merchant-Id": "152b223c2d757c1803f7c67229a505f7",
-  //           "X-Timestamp": Math.floor(Date.now() / 1000).toString(),
-  //           "X-Nonce": Math.random().toString(36).substring(2) + Date.now().toString(36),
-  //           "X-Sign": "c3dd1adce9a276311dd60a12300c902941f47eba", // This should be generated securely
-  //         }
-  //       }
-  //     );
-  //  console.log(response)
-  //     // Handle the response based on the provided format
-  //     if (response.data.status === 200) {
-  //       setValidationStatus({
-  //         success: true,
-  //         message: "API integration validated successfully!",
-  //         log: response.data.log || []
-  //       });
-  //     } else {
-  //       setValidationStatus({
-  //         success: false,
-  //         message: response.statusText || "Validation failed"
-  //       });
-  //     }
-  //   } catch (err) {
-  //     console.error("Validation error:", err);
-  //     setValidationStatus({
-  //       success: false,
-  //       message: "Failed to perform validation: " + (err.response?.data?.message || err.message)
-  //     });
-  //   } finally {
-  //     setValidating(false);
-  //   }
-  // };
-
-  // // Auto-run validation when page loads with a valid session
-  // useEffect(() => {
-  //   if (sessionId && !autoValidationRun && !loading) {
-  //     // Wait a moment for the iframe to load before validating
-  //     const timer = setTimeout(() => {
-  //       setAutoValidationRun(true);
-  //       handleSelfValidation();
-  //     }, 3000);
-      
-  //     return () => clearTimeout(timer);
-  //   }
-  // }, [sessionId, autoValidationRun, loading]);
-
   const handleIframeLoad = () => setIframeLoaded(true);
   
   const handleBackToGames = () => {
@@ -272,12 +206,12 @@ const Gamepage = () => {
 
   if (loading) {
     return (
-      <div className="w-full h-full bg-gray-900">
+      <div className="w-full h-full bg-white">
         <Header />
         <div className="flex items-center justify-center h-[calc(100vh-56px)]">
           <div className="text-center">
-            <div className="w-12 h-12 border-4 border-gray-600 border-t-teal-500 rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-gray-400">Loading game...</p>
+            <div className="w-12 h-12 border-4 border-gray-200 border-t-teal-500 rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading game...</p>
           </div>
         </div>
       </div>
@@ -286,16 +220,16 @@ const Gamepage = () => {
 
   if (error) {
     return (
-      <div className="w-full h-full bg-gray-900">
+      <div className="w-full h-full bg-white">
         <Header />
         <div className="flex items-center justify-center h-[calc(100vh-56px)]">
-          <div className="bg-gray-800/80 border border-gray-700 p-8 rounded-xl text-center max-w-md">
+          <div className="bg-white border border-gray-200 p-8 rounded-xl text-center max-w-md shadow-lg">
             <div className="text-4xl mb-3">⚠️</div>
-            <h2 className="text-xl font-bold text-white mb-2">Game Not Available</h2>
-            <p className="text-gray-400 mb-6">{error}</p>
+            <h2 className="text-xl font-bold text-gray-800 mb-2">Game Not Available</h2>
+            <p className="text-gray-600 mb-6">{error}</p>
             <button
               onClick={handleBackToGames}
-              className="bg-theme_color2 hover:bg-teal-700 text-white px-6 py-2 rounded-md"
+              className="bg-teal-600 hover:bg-teal-700 text-white px-6 py-2 rounded-md transition-colors"
             >
               Back to Games
             </button>
@@ -306,12 +240,11 @@ const Gamepage = () => {
   }
 
   return (
-    <section className="min-h-screen font-anek bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
-      {/* Header with dark glass morphism effect - hidden on mobile when in fullscreen mode */}
+    <section className="min-h-screen font-anek bg-white">
+      {/* Header with white background - hidden on mobile when in fullscreen mode */}
       {(!isMobile || !isFullscreen) && (
         <div className="hidden md:block">
-          <Gameheader 
-            className="bg-gray-900/90 backdrop-blur-sm border-b border-gray-700"
+          <Header 
             showPopup={showPopup}
             setShowPopup={setShowPopup}
             activeLeftTab={activeLeftTab}
@@ -321,7 +254,7 @@ const Gamepage = () => {
       )}
       
       <div className="flex">
-        {/* Fixed Sidebar with dark glass morphism - hidden on mobile */}
+        {/* Fixed Sidebar with white background - hidden on mobile */}
         {!isMobile && (
           <div className="hidden md:block">
             <Sidebar 
@@ -338,37 +271,28 @@ const Gamepage = () => {
           {/* Main content container */}
           <div className={`${isMobile ? 'mx-0' : 'mx-auto md:px-4 max-w-screen-xl'} md:py-[20px]`}>
             {/* Game box */}
-            <div className="game-container border border-gray-800 bg-gradient-to-b from-gray-850 to-gray-900 shadow-[0_10px_30px_rgba(0,0,0,0.35)] overflow-hidden relative">
+            <div className="game-container border border-gray-200 bg-white shadow-lg overflow-hidden relative">
               {/* Top strip / meta info - hidden on mobile */}
               {!isMobile && (
-                <div className="hidden md:flex items-center justify-between px-4 lg:px-5 py-3 border-b border-gray-700/60 bg-gradient-to-r from-gray-900 via-gray-900 to-gray-800 backdrop-blur-md">
+                <div className="hidden md:flex items-center justify-between px-4 lg:px-5 py-3 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white">
                   <div className="flex items-center gap-3">
                     <div>
-                      <div className="text-sm md:text-xl font-semibold text-white drop-shadow-md">{gameName}</div>
-                      <div className="text-[11px] md:text-sm text-teal-300/80 font-medium">
+                      <div className="text-sm md:text-xl font-semibold text-gray-800 drop-shadow-sm">{gameName}</div>
+                      <div className="text-[11px] md:text-sm text-teal-600 font-medium">
                         {isDemo ? "DEMO MODE" : "REAL MONEY MODE"}
                       </div>
                     </div>
                   </div>
 
                   <div className="hidden md:flex items-center gap-2">
-                    {/* API Validation Status Indicator */}
-                    {/* {sessionId && validationStatus && (
-                      <span className={`text-[11px] px-2.5 py-1.5 rounded-md font-medium shadow-inner ${
-                        validationStatus.success 
-                          ? "bg-green-900/70 border border-green-700/30 text-green-300" 
-                          : "bg-red-900/70 border border-red-700/30 text-red-300"
-                      }`}>
-                        {validationStatus.success ? "API VALIDATED" : "VALIDATION FAILED"}
-                      </span>
-                    )} */}
-                    
-                    {/* <span className="text-[11px] px-2.5 py-1.5 rounded-md bg-gradient-to-b from-gray-800 to-gray-900 border border-teal-700/30 text-teal-300 font-medium shadow-inner">
-                      VOLATILITY <span className="text-teal-400">█████</span>
-                    </span>
-                    <span className="text-[11px] px-2.5 py-1.5 rounded-md bg-gradient-to-b from-purple-900 to-purple-950 border border-purple-700/30 text-purple-300 font-medium shadow-inner">
-                      PROVIDER
-                    </span> */}
+                    {/* Refresh button */}
+                    <button
+                      onClick={handleRefreshGame}
+                      className="bg-gray-100 hover:bg-gray-200 p-2 rounded-lg border border-gray-200 transition-all duration-200"
+                      aria-label="Refresh game"
+                    >
+                      <FaSync className="h-4 w-4 text-gray-600" />
+                    </button>
                   </div>
                 </div>
               )}
@@ -403,48 +327,58 @@ const Gamepage = () => {
                     />
 
                     {!iframeLoaded && (
-      <div className="absolute inset-0 bg-gray-900 flex flex-col items-center justify-center">
-      <div className="relative w-16 h-16 mb-4">
-        {/* First Ring - Teal */}
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-16 h-16 border-3 border-gray-700 border-t-teal-500 rounded-full animate-spin"></div>
-        {/* Second Ring - Purple */}
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-12 h-12 border-3 border-gray-700 border-t-teal-500 rounded-full animate-spin animation-delay-200"></div>
-        {/* Third Ring - Amber */}
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-8 h-8 border-3 border-gray-700 border-t-teal-500 rounded-full animate-spin animation-delay-400"></div>
-      </div>
-      <p className="text-gray-300 text-lg font-[600] animate-pulse">
-        Game is loading...
-      </p>
-    </div>
+                      <div className="absolute inset-0 bg-white flex flex-col items-center justify-center">
+                        <div className="relative w-16 h-16 mb-4">
+                          {/* First Ring - Teal */}
+                          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-16 h-16 border-3 border-gray-200 border-t-teal-500 rounded-full animate-spin"></div>
+                          {/* Second Ring - Purple */}
+                          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-12 h-12 border-3 border-gray-200 border-t-teal-500 rounded-full animate-spin animation-delay-200"></div>
+                          {/* Third Ring - Amber */}
+                          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-8 h-8 border-3 border-gray-200 border-t-teal-500 rounded-full animate-spin animation-delay-400"></div>
+                        </div>
+                        <p className="text-gray-600 text-lg font-[600] animate-pulse">
+                          Game is loading...
+                        </p>
+                      </div>
                     )}
                     
                     {/* Game controls */}
                     <div className="absolute top-3 right-3 flex gap-2 z-10">
-                      {/* Refresh button */}
+                      {/* Refresh button for mobile */}
+                      {isMobile && (
+                        <button
+                          onClick={handleRefreshGame}
+                          className="bg-white/90 hover:bg-white backdrop-blur-sm p-2 rounded-lg border border-gray-200 shadow-md transition-all duration-200"
+                          aria-label="Refresh game"
+                        >
+                          <FaSync className="h-4 w-4 text-gray-600" />
+                        </button>
+                      )}
+                      
                       {/* Fullscreen button */}
                       <button
                         onClick={toggleFullscreen}
-                        className="bg-gray-900/70 md:flex hidden hover:bg-gray-800/90 backdrop-blur-sm p-2 rounded-lg border border-gray-700 transition-all duration-200 hover:scale-105"
+                        className="bg-white/90 hover:bg-white backdrop-blur-sm p-2 rounded-lg border border-gray-200 shadow-md transition-all duration-200 hover:scale-105"
                         aria-label="Toggle fullscreen"
                       >
                         {isFullscreen ? (
-                          <FaCompress className="h-4 w-4 text-white" />
+                          <FaCompress className="h-4 w-4 text-gray-600" />
                         ) : (
-                          <FaExpand className="h-4 w-4 text-white" />
+                          <FaExpand className="h-4 w-4 text-gray-600" />
                         )}
                       </button>
 
                       {/* Validation status indicator for mobile */}
                       {sessionId && validationStatus && isMobile && (
-                        <div className={`p-2 rounded-lg border ${
+                        <div className={`p-2 rounded-lg border shadow-md ${
                           validationStatus.success 
-                            ? "bg-green-900/70 border-green-700/30" 
-                            : "bg-red-900/70 border-red-700/30"
+                            ? "bg-green-50 border-green-200" 
+                            : "bg-red-50 border-red-200"
                         }`}>
                           {validationStatus.success ? (
-                            <FaCheckCircle className="h-4 w-4 text-green-300" />
+                            <FaCheckCircle className="h-4 w-4 text-green-600" />
                           ) : (
-                            <FaExclamationTriangle className="h-4 w-4 text-red-300" />
+                            <FaExclamationTriangle className="h-4 w-4 text-red-600" />
                           )}
                         </div>
                       )}
@@ -456,7 +390,9 @@ const Gamepage = () => {
 
             {/* Game tags - hidden on mobile when in fullscreen */}
             {(!isMobile || !isFullscreen) && gameTags.length > 0 && (
-              <GameTags tags={gameTags} onTagClick={handleTagClick} />
+              <div className="mt-4 px-4">
+                <GameTags tags={gameTags} onTagClick={handleTagClick} />
+              </div>
             )}
           </div>
         </div>

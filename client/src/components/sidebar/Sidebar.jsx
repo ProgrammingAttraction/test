@@ -40,13 +40,13 @@ import { useUser } from '../../context/UserContext';
 import { HiIdentification } from "react-icons/hi";
 
 // Images
-import popular_img from "../../assets/popular.png";
+import popular_img from "../../assets/category/Casino.svg";
 import dice_img from "../../assets/dice.png";
-import user_img from "../../assets/user.png";
-import bonus_img from "../../assets/bonus.png";
-import affiliate_img from "../../assets/affiliate.png";
+import user_img from "../../assets/sidebar_icon/img3.svg";
+import bonus_img from "../../assets/sidebar_icon/img12.svg";
+import affiliate_img from "../../assets/sidebar_icon/img4.svg";
 import question_img from "../../assets/question.png";
-import teamwork_img from "../../assets/teamwork.png";
+import teamwork_img from "../../assets/sidebar_icon/img2.svg";
 import party_img from "../../assets/party.png";
 import link_img from "../../assets/link.png";
 import download_img from "../../assets/cloud.png";
@@ -58,9 +58,9 @@ import diamond_img from "../../assets/level/diamond.png";
 import platinum_img from "../../assets/level/platinum.png";
 import weekly_img from "../../assets/weekly.jpg";
 import monthly_img from "../../assets/monthly.jpg";
-import slot_img from "../../assets/slot.png";
-import controller_img from "../../assets/controller.png";
-import popular_games from "../../assets/famous.png";
+import slot_img from "../../assets/category/slots.svg";
+import controller_img from "../../assets/category/other.svg";
+import popular_games from "../../assets/category/popular.svg";
 import man from "../../assets/profileimages/man.png";
 import man1 from "../../assets/profileimages/man1.png";
 import man2 from "../../assets/profileimages/man2.png";
@@ -115,19 +115,7 @@ const Sidebar = ({ showPopup, setShowPopup, activeLeftTab, setActiveLeftTab }) =
     { icon: bonus_img, label: t?.bonus || 'বোনাস', leftTab: t?.bonus || 'বোনাস' },
     { icon: teamwork_img, label: t?.provider || 'প্রভাইডার', path: '/provider' },
     { icon: affiliate_img, label: t?.affiliate || 'এফিলিয়েট', path: '/affiliate-programme' },
-    { icon: party_img, label: t?.vipClub || 'ভিআইপি ক্লাব', path: '/vip-club' },
-    { icon: link_img, label: t?.referralProgram || 'রেফারেল প্রোগ্রাম' },
-    {
-      icon: download_img,
-      label: t?.downloadApp || 'ডাউনলোড অ্যাপ',
-      onClick: () => {
-        const apkUrl = 'https://docs.google.com/uc?export=download&id=1oj3ReyGd6J4uK_8nByYzZBbzA-BVYb64';
-        downloadFileAtURL(apkUrl);
-        toast.success(t?.downloadStarted || 'Download started!');
-      }
-    },
     { icon: support_img, label: t?.contact || 'যোগাযোগ', path: '/contact' },
-    { icon: question_img, label: t?.faqPolicy || 'FAQ/নীতি', path: '/faq-policy' },
   ];
 
   const filteredMenuItems = menuItems.filter(item => {

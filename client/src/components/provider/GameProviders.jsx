@@ -104,7 +104,7 @@ const GameProviders = () => {
 
         {/* Scrollable Content */}
         <div className="ml-0 md:ml-[330px] flex-1 p-4 sm:p-6 md:p-8 overflow-y-auto">
-          <div className="max-w-7xl mx-auto">
+          <div className="w-full mx-auto">
 
             {/* Hero Section */}
             <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-6 md:p-8 lg:p-12 mb-8 sm:mb-12 border border-gray-200 shadow-sm">
