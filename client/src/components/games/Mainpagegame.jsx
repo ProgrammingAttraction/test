@@ -21,7 +21,7 @@ import dice_games from "../../assets/dice.png";
 import american_roulette_games from "../../assets/american.png";
 import crad_games from "../../assets/card.png";
 import fire_games from "../../assets/fire.png";
-import casino_games from "../../assets/category/casino.svg";
+import casino_games from "../../assets/category/Casino.svg";
 import instant_games from "../../assets/category/instant.svg";
 import famous_games from "../../assets/category/popular.svg";
 import sports_games from "../../assets/sports.png";
