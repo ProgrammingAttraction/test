@@ -15,7 +15,7 @@ const Deposit = () => {
   const base_url = import.meta.env.VITE_API_KEY_Base_URL;
   const base_url2 = import.meta.env.VITE_API_KEY_Base_URL2;
   const frontend_url = import.meta.env.VITE_API_KEY_Frotend_URL;
-  const amounts = [500, 800, 1500, 2000, 5000];
+  const amounts = [300,500, 800, 1500, 2000, 5000];
   const [availableBonuses, setAvailableBonuses] = useState([]);
   const [bonusLoading, setBonusLoading] = useState(false);
   const [selectedBonus, setSelectedBonus] = useState(null);
@@ -419,9 +419,9 @@ const Deposit = () => {
               />
               <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-bold text-gray-400">৳</span>
             </div>
-            <p className="text-[11px] text-red-400 mb-3">
-              *{t.minimumAmount?.replace('{amount}', formatNumber(300)) || 'Min & maximum deposit amount'}: 300–{formatNumber(30000)} BDT
-            </p>
+   <p className="text-[11px] text-red-400 mb-3">
+  *{t.minimumAmount?.replace('{amount}', formatNumber(300)) || 'Min & maximum deposit amount'}–{formatNumber(25000)} BDT
+</p>
 
             {/* Quick Amount Buttons */}
             <div className="flex flex-wrap gap-2">

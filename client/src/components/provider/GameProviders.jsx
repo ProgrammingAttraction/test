@@ -3,6 +3,7 @@ import Header from '../header/Header';
 import Sidebar from '../sidebar/Sidebar';
 import { GlobeAltIcon } from '@heroicons/react/24/solid';
 import { LanguageContext } from '../../context/LanguageContext';
+import { useNavigate } from 'react-router-dom';
 
 const GameProviders = () => {
   const { t, changeLanguage, language } = useContext(LanguageContext);
@@ -11,6 +12,7 @@ const GameProviders = () => {
   const [error, setError] = useState(null);
   const [showPopup, setShowPopup] = useState(false);
   const [activeLeftTab, setActiveLeftTab] = useState(t.myAccount);
+  const navigate = useNavigate();
 
   const toggleLanguage = () => {
     changeLanguage(
@@ -44,14 +46,20 @@ const GameProviders = () => {
     fetchProviders();
   }, [base_url]);
 
-  // Why Us Points using translation system
-  const whyUsPoints = [
-    t.providersLoadError, // Using existing translation key, you might want to add specific ones
-    t.providersLoadError, // Using existing translation key, you might want to add specific ones
-    t.providersLoadError, // Using existing translation key, you might want to add specific ones
-    t.providersLoadError, // Using existing translation key, you might want to add specific ones
-    t.providersLoadError, // Using existing translation key, you might want to add specific ones
-  ];
+  // Handle provider click to navigate to provider games
+  const handleProviderClick = (provider) => {
+    // Get the provider name for the query parameter
+    const providerName = provider.providerName || provider.name;
+    
+    // Encode the provider name for URL safety
+    const encodedProviderName = encodeURIComponent(providerName);
+    
+    // Navigate to provider-games page with provider name as query parameter
+    navigate(`/provider-games?provider=${encodedProviderName}`, {
+      replace: false,
+      state: { fromGameProviders: true }
+    });
+  };
 
   return (
     <section className="min-h-screen font-anek pb-[90px] md:pb-0 bg-gradient-to-br from-gray-50 via-white to-gray-100 text-gray-800">
@@ -125,11 +133,11 @@ const GameProviders = () => {
               
               {loading ? (
                <div className="flex justify-center items-center h-64">
-          <div className="relative">
-            <div className="animate-spin rounded-full h-12 w-12 border-4 border-t-blue-500 border-b-blue-500 border-l-transparent border-r-transparent"></div>
-            <div className="absolute inset-0 animate-pulse rounded-full h-12 w-12 bg-blue-500/10 blur-sm"></div>
-          </div>
-        </div>
+                  <div className="relative">
+                    <div className="animate-spin rounded-full h-12 w-12 border-4 border-t-blue-500 border-b-blue-500 border-l-transparent border-r-transparent"></div>
+                    <div className="absolute inset-0 animate-pulse rounded-full h-12 w-12 bg-blue-500/10 blur-sm"></div>
+                  </div>
+                </div>
               ) : error ? (
                 <div className="bg-red-50 rounded-xl p-6 text-center border border-red-200 max-w-2xl mx-auto">
                   <p className="text-red-600 mb-4">{t.providersLoadError}</p>
@@ -143,7 +151,11 @@ const GameProviders = () => {
               ) : (
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4 md:gap-5">
                   {providers.map((provider) => (
-                    <div key={provider._id} className="bg-white rounded-lg overflow-hidden border border-gray-200 hover:border-blue-400 transition-all hover:shadow-lg hover:scale-105 duration-300 group">
+                    <div 
+                      key={provider._id} 
+                      onClick={() => handleProviderClick(provider)}
+                      className="bg-white rounded-lg overflow-hidden border border-gray-200 hover:border-blue-400 transition-all hover:shadow-lg hover:scale-105 duration-300 group cursor-pointer"
+                    >
                       <div className="p-3 flex flex-col items-center h-full">
                         <div className="w-full h-20 mb-3 flex items-center justify-center bg-gray-50 rounded-md p-1 group-hover:bg-gray-100 transition-colors">
                           <img 
@@ -202,7 +214,10 @@ const GameProviders = () => {
                 }
               </p>
               <div className="text-center">
-                <button className="px-6 py-2 sm:px-8 sm:py-3 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-lg font-bold text-base sm:text-lg hover:from-theme_color2 hover:to-purple-600 transition-all transform hover:scale-105 shadow-md">
+                <button 
+                  onClick={() => navigate('/all-games')}
+                  className="px-6 py-2 sm:px-8 sm:py-3 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-lg font-bold text-base sm:text-lg hover:from-theme_color2 hover:to-purple-600 transition-all transform hover:scale-105 shadow-md"
+                >
                   {t.allGames}
                 </button>
               </div>

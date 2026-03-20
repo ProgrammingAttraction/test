@@ -326,7 +326,7 @@ const GameGridSection = ({
 
 // Provider Card Component
 const ProviderCard = ({ provider, t }) => (
-  <div className="relative group overflow-hidden rounded-[5px] bg-gray-900 hover:border-cyan-400/30 transition-all duration-300">
+  <div className="relative group overflow-hidden rounded-[5px] bg-gray-50 border-[1px] border-gray-200 transition-all duration-300">
     <NavLink to={`/all-games?provider=${provider.providerName}`}>
       <div className="flex items-center justify-center p-2">
         <img

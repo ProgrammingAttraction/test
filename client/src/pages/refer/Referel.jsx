@@ -12,7 +12,8 @@ import {
   FaCoins,
   FaCheck,
   FaCalendarAlt,
-  FaChevronRight
+  FaChevronRight,
+  FaGift
 } from 'react-icons/fa';
 import { useNavigate, NavLink } from 'react-router-dom';
 import { MdArrowBackIosNew } from "react-icons/md";
@@ -34,6 +35,7 @@ const profileImages = [man, man1];
 const Referral = () => {
   const { t, changeLanguage, language } = useContext(LanguageContext);
   const [copied, setCopied] = useState(false);
+  const [activeTab, setActiveTab] = useState('invite');
   const [referralData, setReferralData] = useState({
     referralCode: '',
     referredBy: null,
@@ -51,7 +53,6 @@ const Referral = () => {
   const navigate = useNavigate();
   const API_BASE_URL = import.meta.env.VITE_API_KEY_Base_URL;
   const [feedback, setFeedback] = useState({ type: '', message: '', field: '' });
-  const [activeTab, setActiveTab] = useState('account');
 
   const referralLink = `${window.location.origin}/?refer_code=${userData?.referralCode || ''}`;
 
@@ -104,10 +105,10 @@ const Referral = () => {
   }, []);
 
   useEffect(() => {
-    if (userData?._id) {
+    if (userData?._id && (activeTab === 'list' || activeTab === 'reward')) {
       fetchReferralData();
     }
-  }, [userData]);
+  }, [activeTab, userData]);
 
   const fetchReferralData = async () => {
     try {
@@ -140,10 +141,49 @@ const Referral = () => {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const shareOnSocialMedia = (platform) => {
+    let url = '';
+    const text = `${t.referralShareText || 'Join using my referral link:'} ${referralLink}`;
+    switch (platform) {
+      case 'facebook':
+        url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(referralLink)}`;
+        break;
+      case 'twitter':
+        url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
+        break;
+      case 'telegram':
+        url = `https://t.me/share/url?url=${encodeURIComponent(referralLink)}&text=${encodeURIComponent(text)}`;
+        break;
+      case 'whatsapp':
+        url = `https://wa.me/?text=${encodeURIComponent(text)}`;
+        break;
+      default:
+        return;
+    }
+    window.open(url, '_blank', 'noopener,noreferrer');
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return t.na || 'N/A';
+    const date = new Date(dateString);
+    return date.toLocaleDateString(language.code === 'bn' ? 'bn-BD' : 'en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat(language.code === 'bn' ? 'bn-BD' : 'en-US', {
       minimumFractionDigits: 2
     }).format(amount || 0);
+  };
+
+  const formatMobileNumber = (number) => {
+    if (!number || number.length < 7) return number;
+    const firstPart = number.substring(0, 4);
+    const lastPart = number.substring(number.length - 3);
+    return `${firstPart}****${lastPart}`;
   };
 
   const transferToMainBalance = async () => {
@@ -184,13 +224,13 @@ const Referral = () => {
         >
           <MdArrowBackIosNew className="text-xl" />
         </button>
-        <h1 className="text-white font-bold text-lg m-0">Refferal Program</h1>
+        <h1 className="text-white font-bold text-lg m-0">{t.referralProgramTitle || 'Referral Program'}</h1>
         <div className="w-7" />
       </div>
 
       <div className="pb-6 max-w-md mx-auto">
 
-        {/* Teal Hero Card — same as Profile */}
+        {/* Teal Hero Card */}
         <div className="mx-3 mt-3 rounded-2xl p-5 relative overflow-hidden shadow-[0_4px_20px_rgba(0,188,212,0.3)] bg-[#00B4D8]">
           {/* Level badge top right */}
           <div className="absolute top-3 right-3 bg-white/20 rounded-full px-3 py-0.5 text-[11px] text-white font-semibold">
@@ -235,7 +275,7 @@ const Referral = () => {
           </div>
         </div>
 
-        {/* Tab Navigation — same style as Profile */}
+        {/* Page Tab Navigation (to other pages) */}
         <div className="flex gap-2 px-3 pb-3 pt-3 overflow-x-auto scrollbar-hide">
           {[
             { id: 'account', label: t.account || 'Account', path: '/profile' },
@@ -262,7 +302,7 @@ const Referral = () => {
           ))}
         </div>
 
-        {/* Feedback */}
+        {/* Feedback Banner */}
         {feedback.message && (
           <div className={`mx-3 mb-3 p-3 rounded ${feedback.type === 'success' ? 'bg-green-800 text-green-100' : 'bg-red-800 text-red-100'}`}>
             {feedback.message}
@@ -272,106 +312,215 @@ const Referral = () => {
           </div>
         )}
 
-        {/* My Refer Link Section */}
-        <div className="px-3 pb-2.5">
-          <div className="text-gray-500 text-xs font-semibold mb-2 pl-1">My Refer link</div>
+        {/* Inner Function Tabs */}
+        <div className="px-3 pb-2">
           <div className="bg-[#e8e0f0] p-[10px] rounded-xl">
-            <div className="bg-white rounded-xl px-4 py-3 flex items-center gap-2">
-              <input
-                type="text"
-                className="flex-1 text-xs text-gray-500 bg-transparent border-none outline-none truncate"
-                value={referralLink}
-                readOnly
-              />
-              <button
-                onClick={handleCopyLink}
-                className="flex-shrink-0 bg-[#00B4D8] hover:bg-cyan-500 text-white text-xs font-bold px-4 py-1.5 rounded-lg transition-colors"
-              >
-                {copied ? 'Copied!' : 'Copy'}
-              </button>
+            <div className="flex gap-2 overflow-x-auto scrollbar-hide">
+              {[
+                { id: 'invite', label: t.referralTabInvite || 'Invite', icon: <FaUser size={11} /> },
+                { id: 'list', label: t.referralTabList || 'Friend List', icon: <FaHistory size={11} /> },
+                { id: 'reward', label: t.referralTabReward || 'Reward', icon: <FaCoins size={11} /> },
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex-shrink-0 flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-semibold border-none cursor-pointer transition-colors
+                    ${activeTab === tab.id
+                      ? 'bg-[#00B4D8] text-white shadow-sm'
+                      : 'bg-white text-gray-500 hover:bg-gray-50'
+                    }`}
+                >
+                  {tab.icon}
+                  {tab.label}
+                </button>
+              ))}
             </div>
           </div>
         </div>
 
-        {/* Refer And Earning Section */}
-        <div className="px-3 pb-2.5">
-          <div className="flex items-center justify-between mb-2 pl-1">
-            <div className="text-gray-500 text-xs font-semibold">Refer And Earning</div>
-            <div className="flex items-center gap-1 text-gray-500 text-xs">
-              <span>Total refer:{referralData.totalReferrals}</span>
-              <FaChevronRight className="text-[10px]" />
-            </div>
+        {/* Loading */}
+        {loading && (
+          <div className="flex justify-center items-center h-32">
+            <div className="animate-spin rounded-full h-8 w-8 border-4 border-t-cyan-500 border-b-cyan-500 border-l-transparent border-r-transparent" />
           </div>
+        )}
 
-          {/* Loading */}
-          {loading && (
-            <div className="flex justify-center items-center h-24">
-              <div className="animate-spin rounded-full h-8 w-8 border-4 border-t-cyan-500 border-b-cyan-500 border-l-transparent border-r-transparent" />
+        {/* Error */}
+        {error && !loading && (
+          <div className="mx-3 mb-3 bg-red-100 text-red-600 p-3 rounded-xl text-xs">{error}</div>
+        )}
+
+        {/* ── INVITE TAB ── */}
+        {!loading && activeTab === 'invite' && (
+          <>
+            {/* My Refer Link */}
+            <div className="px-3 pb-2.5">
+              <div className="text-gray-500 text-xs font-semibold mb-2 pl-1">{t.referralLinkTitle || 'My Refer Link'}</div>
+              <div className="bg-[#e8e0f0] p-[10px] rounded-xl">
+                <div className="bg-white rounded-xl px-4 py-3 flex items-center gap-2">
+                  <input
+                    type="text"
+                    className="flex-1 text-xs text-gray-500 bg-transparent border-none outline-none truncate"
+                    value={referralLink}
+                    readOnly
+                  />
+                  <button
+                    onClick={handleCopyLink}
+                    className="flex-shrink-0 bg-[#00B4D8] hover:bg-cyan-500 text-white text-xs font-bold px-4 py-1.5 rounded-lg transition-colors flex items-center gap-1"
+                  >
+                    {copied ? <FaCheck size={10} /> : <FaCopy size={10} />}
+                    {copied ? (t.referralCopied || 'Copied!') : (t.referralCopy || 'Copy')}
+                  </button>
+                </div>
+              </div>
             </div>
-          )}
 
-          {/* Error */}
-          {error && !loading && (
-            <div className="bg-red-100 text-red-600 p-3 rounded-xl text-xs mb-2">{error}</div>
-          )}
+            {/* Quick Stats */}
+   {/* Quick Stats */}
+<div className="px-3 pb-2.5">
+  <div className="text-gray-500 text-xs font-semibold mb-2 pl-1">{t.referralTotalInvites || 'Overview'}</div>
+  <div className="bg-[#e8e0f0] p-[10px] rounded-xl">
+    <div className="bg-white rounded-xl overflow-hidden">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-[rgba(200,190,220,0.5)]">
+        <span className="text-xs text-gray-500">{t.referralTotalInvites || 'Total Referrals'}</span>
+        <span className="text-sm font-bold text-[#00B4D8]">{referralData.totalReferrals}</span>
+      </div>
+      <div className="flex items-center justify-between px-4 py-3 border-b border-[rgba(200,190,220,0.5)]">
+        <span className="text-xs text-gray-500">{t.referralTabList || 'Active Referrals'}</span>
+        <span className="text-sm font-bold text-[#00B4D8]">{referralData.activeReferrals}</span>
+      </div>
+      <div className="flex items-center justify-between px-4 py-3">
+        <span className="text-xs text-gray-500">{t.referralTotalEarnings || 'Referral Earnings'}</span>
+        <span className="text-sm font-bold text-[#00B4D8]">৳{formatCurrency(referralData.referralEarnings)}</span>
+      </div>
+    </div>
+  </div>
+</div>
+          </>
+        )}
 
-          {/* Referred Users List */}
-          {!loading && (
+        {/* ── LIST TAB ── */}
+        {!loading && activeTab === 'list' && (
+          <div className="px-3 pb-2.5">
+            <div className="flex items-center justify-between mb-2 pl-1">
+              <div className="text-gray-500 text-xs font-semibold">{t.referralTabList || 'Friend List'}</div>
+              <div className="flex items-center gap-1 text-gray-500 text-xs">
+                <span>Total: {referralData.totalReferrals}</span>
+                <FaChevronRight className="text-[10px]" />
+              </div>
+            </div>
             <div className="bg-[#e8e0f0] p-[10px] rounded-xl">
               <div className="bg-white rounded-xl overflow-hidden">
+                {/* Table Header */}
+                <div className="grid grid-cols-3 bg-[#f0eaf8] px-4 py-2 border-b border-[rgba(200,190,220,0.5)]">
+                  <span className="text-[10px] font-semibold text-gray-500">{t.referralTableUser || 'User'}</span>
+                  <span className="text-[10px] font-semibold text-gray-500 text-center">{t.referralTableDate || 'Join Date'}</span>
+                  <span className="text-[10px] font-semibold text-gray-500 text-right">{t.referralTableReward || 'Earned'}</span>
+                </div>
                 {referralData.referredUsers.length > 0 ? (
                   referralData.referredUsers.map((user, i, arr) => (
                     <div
                       key={user.id || i}
-                      className={`flex items-center justify-between px-4 py-3 ${i < arr.length - 1 ? 'border-b border-[rgba(200,190,220,0.5)]' : ''}`}
+                      className={`grid grid-cols-3 items-center px-4 py-3 ${i < arr.length - 1 ? 'border-b border-[rgba(200,190,220,0.5)]' : ''}`}
                     >
                       <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 rounded-full bg-gray-200 flex items-center justify-center">
+                        <div className="w-7 h-7 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
                           <FaUser size={11} className="text-gray-400" />
                         </div>
-                        <span className="text-sm text-gray-800 font-medium">{user.username || 'Customer ID'}</span>
+                        <div>
+                          <p className="text-xs font-medium text-gray-800 leading-none">{user.username || 'Customer'}</p>
+                          {user.phone && (
+                            <p className="text-[10px] text-gray-400 mt-0.5">{formatMobileNumber(user.phone)}</p>
+                          )}
+                        </div>
                       </div>
-                      <span className="text-sm text-gray-400 font-medium">{formatCurrency(user.earnedAmount)}</span>
+                      <div className="flex items-center justify-center gap-1 text-[10px] text-gray-400">
+                        <FaCalendarAlt size={9} />
+                        {formatDate(user.joinDate)}
+                      </div>
+                      <div className="text-xs font-semibold text-[#00B4D8] text-right">
+                        ৳{formatCurrency(user.earnedAmount)}
+                      </div>
                     </div>
                   ))
                 ) : (
-                  // Placeholder rows matching screenshot style
-                  [1,2,3,4,5].map((_, i, arr) => (
-                    <div
-                      key={i}
-                      className={`flex items-center justify-between px-4 py-3 ${i < arr.length - 1 ? 'border-b border-[rgba(200,190,220,0.5)]' : ''}`}
-                    >
-                      <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 rounded-full bg-gray-200 flex items-center justify-center">
-                          <FaUser size={11} className="text-gray-400" />
-                        </div>
-                        <span className="text-sm text-gray-500 font-medium">Customer ID</span>
-                      </div>
-                      <span className="text-sm text-gray-400">—</span>
+                  <>
+                    <div className="py-4 text-center">
+                      <p className="text-xs text-gray-400">{t.referralNoFriends || 'No referrals yet'}</p>
+                      <p className="text-[10px] text-gray-300 mt-1">{t.referralInviteFriends || 'Invite friends to earn rewards'}</p>
                     </div>
-                  ))
+                  </>
                 )}
               </div>
             </div>
-          )}
-        </div>
+          </div>
+        )}
 
-        {/* Transfer to Main Balance (if eligible) */}
-        {!loading && referralData.referralEarnings >= 1000 && (
-          <div className="px-3 pb-2.5">
-            <div className="bg-[#e8e0f0] p-[10px] rounded-xl">
-              <div className="bg-white rounded-xl px-4 py-3">
-                <p className="text-xs text-gray-500 mb-1">{t.referralCodeText || 'Referral Code'}: <span className="font-bold text-gray-700">{referralData.referralCode}</span></p>
-                <p className="text-xs text-gray-500 mb-2">{t.referralBonusText || 'Bonus'}: ৳{formatCurrency(referralData.referralEarnings)}</p>
-                <button
-                  onClick={transferToMainBalance}
-                  className="w-full bg-[#00B4D8] hover:bg-cyan-500 text-white py-2 px-4 rounded-lg text-sm font-semibold transition-colors"
-                >
-                  {t.referralTransferButton || 'Transfer to Main Balance'}
-                </button>
+        {/* ── REWARD TAB ── */}
+        {!loading && activeTab === 'reward' && (
+          <>
+            {/* Stats Grid */}
+            <div className="px-3 pb-2.5">
+              <div className="text-gray-500 text-xs font-semibold mb-2 pl-1">Earnings Overview</div>
+              <div className="bg-[#e8e0f0] p-[10px] rounded-xl">
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="bg-white rounded-xl px-4 py-3">
+                    <div className="text-[10px] text-gray-400 mb-1">{t.referralTotalInvites || 'Total Invites'}</div>
+                    <div className="text-lg font-bold text-[#00B4D8]">{referralData.totalReferrals}</div>
+                  </div>
+                  <div className="bg-white rounded-xl px-4 py-3">
+                    <div className="text-[10px] text-gray-400 mb-1">{t.referralTotalEarnings || 'Total Earnings'}</div>
+                    <div className="text-lg font-bold text-[#00B4D8]">৳{formatCurrency(referralData.referralEarnings)}</div>
+                  </div>
+                  <div className="bg-white rounded-xl px-4 py-3">
+                    <div className="text-[10px] text-gray-400 mb-1">Deposited Referrals</div>
+                    <div className="text-lg font-bold text-[#00B4D8]">{referralData.depositedReferrals}</div>
+                  </div>
+                  <div className="bg-white rounded-xl px-4 py-3">
+                    <div className="text-[10px] text-gray-400 mb-1">Active Referrals</div>
+                    <div className="text-lg font-bold text-[#00B4D8]">{referralData.activeReferrals}</div>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
+
+            {/* Referral Code + Transfer */}
+            <div className="px-3 pb-2.5">
+              <div className="text-gray-500 text-xs font-semibold mb-2 pl-1">Referral Bonus</div>
+              <div className="bg-[#e8e0f0] p-[10px] rounded-xl">
+                <div className="bg-white rounded-xl px-4 py-4">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs text-gray-500">{t.referralCodeText || 'Referral Code'}</span>
+                    <span className="text-xs font-bold text-gray-700">{referralData.referralCode || userData?.referralCode || '—'}</span>
+                  </div>
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-xs text-gray-500">{t.referralBonusText || 'Current Bonus'}</span>
+                    <span className="text-xs font-bold text-[#00B4D8]">৳{formatCurrency(referralData.referralEarnings)}</span>
+                  </div>
+
+                  {referralData.referralEarnings >= 1000 ? (
+                    <>
+                      <p className="text-[10px] text-green-600 bg-green-50 rounded-lg px-3 py-2 mb-3">
+                        {t.referralEligibleText || '🎉 You are eligible to transfer your referral bonus!'}
+                      </p>
+                      <button
+                        onClick={transferToMainBalance}
+                        className="w-full bg-[#00B4D8] hover:bg-cyan-500 text-white py-2 px-4 rounded-lg text-sm font-semibold transition-colors"
+                      >
+                        {t.referralTransferButton || 'Transfer to Main Balance'}
+                      </button>
+                    </>
+                  ) : (
+                    <div className="bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                      <p className="text-[10px] text-amber-600">
+                        {t.referralThresholdText || 'Minimum ৳1,000 required to transfer. Keep inviting friends!'}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </>
         )}
 
       </div>

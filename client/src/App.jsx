@@ -34,6 +34,7 @@ import KYCcallback from './pages/kyccallback/KYCcallback'
 import KYCPage from './pages/kyc/KYCPage'
 import TransactionPassword from './pages/profile/transactionpassword/TransactionPassword'
 import TransactionPasswordReset from './pages/profile/passwordreset/TransactionPasswordReset'
+import ProviderGames from './components/providergames/ProviderGames'
 // ----------updated-------------
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -128,6 +129,7 @@ const Loader = () => {
             <Account />
           </ProtectedRoute>
         } />
+        <Route exact path="/provider-games" element={<ProviderGames />} />
         
         <Route exact path="/hot-games" element={<Hotgames />} />
         <Route exact path="/live-games" element={<Livegames />} />
