@@ -148,7 +148,7 @@ const Header = ({ setShowPopup, setActiveLeftTab, showPopup, activeLeftTab }) =>
 
   const currencyOptions = [
     { value: 'BDT', label: 'Bangladeshi Tk', flag: '🇧🇩' },
-    { value: 'USD', label: 'US Dollar', flag: '🇺🇸' },
+    // { value: 'USD', label: 'US Dollar', flag: '🇺🇸' },
   ];
 
   const getCurrentCurrencyDisplay = () => {
@@ -1224,27 +1224,53 @@ const Header = ({ setShowPopup, setActiveLeftTab, showPopup, activeLeftTab }) =>
           </div>
           <div className='h-full flex w-full justify-center py-[40px] items-end'>
             <div className='w-full'>
-              <div className="relative w-full border-t-[1px] border-b-[1px] border-gray-200 mt-2 py-[5px] mb-[20px]">
-                <button onClick={toggleDropdown} className="flex items-center w-full p-3 cursor-pointer text-gray-800">
-                  <img src={language.flag} alt={language.name} className="w-6 h-6 mr-2 rounded-full" />
-                  <span className="flex-1 text-left font-[500]">{language.name}</span>
-                  <MdArrowDropDown className={`text-lg transition-transform ${showDropdown ? 'rotate-180' : ''}`} />
-                </button>
-                {showDropdown && (
-                  <div className="mt-2 w-full bg-white/80 backdrop-blur-md rounded-[6px] shadow-xl border border-white/20 z-50">
-                    {languages.map((lang) => (
-                      <button
-                        key={lang.code}
-                        onClick={() => { selectLanguage(lang); closeSidebar(); }}
-                        className="flex items-center w-full px-4 py-2 text-gray-800 hover:bg-white/50 transition-colors"
-                      >
-                        <img src={lang.flag} alt={lang.name} className="w-6 h-6 mr-2 rounded-full" />
-                        <span className="font-[500]">{lang.name}</span>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
+       {/* ── Custom Language Toggle (replaces the old dropdown) ── */}
+<div className="relative w-full border-t-[1px] border-b-[1px] border-gray-200 mt-2 py-[5px] mb-[20px]">
+  <button
+    onClick={() => {
+      const next = languages.find(l => l.code !== language.code);
+      selectLanguage(next);
+    }}
+    className="flex items-center w-full p-3 cursor-pointer text-gray-800 justify-between"
+  >
+    {/* Left: current language flag + name */}
+    <div className="flex items-center gap-3">
+      <img
+        src={language.flag}
+        alt={language.name}
+        className="w-7 h-7 rounded-full object-cover"
+      />
+      <span className="font-[500] text-sm">{language.name}</span>
+    </div>
+
+    {/* Right: sliding toggle switch */}
+    <div
+      className="relative flex-shrink-0"
+      style={{ width: '52px', height: '28px' }}
+    >
+      <div
+        className="absolute inset-0 rounded-full transition-all duration-300"
+        style={{
+          background: language.code === 'en' ? '#0FD9F1' : '#e2e8f0',
+          border: '0.5px solid rgba(0,0,0,0.08)'
+        }}
+      />
+      <div
+        className="absolute top-[3px] w-[22px] h-[22px] rounded-full bg-white flex items-center justify-center transition-all duration-300"
+        style={{
+          left: language.code === 'en' ? '27px' : '3px',
+          boxShadow: '0 1px 4px rgba(0,0,0,0.18)'
+        }}
+      >
+        <img
+          src={language.flag}
+          alt=""
+          className="w-4 h-4 rounded-full object-cover"
+        />
+      </div>
+    </div>
+  </button>
+</div>
               <div className="flex gap-3 items-center justify-center">
                 <a href="https://t.me/+CUD2OZlCEOAxMTg0" target="_blank" className="w-10 h-10 flex items-center justify-center rounded-full bg-[#24A1DE] text-white shadow-sm hover:scale-110 transition-transform"><FaTelegramPlane /></a>
                 <a href="https://wa.me/61480897550" target="_blank" className="w-10 h-10 flex items-center justify-center rounded-full bg-[#4ADE80] text-white shadow-sm hover:scale-110 transition-transform"><FaWhatsapp /></a>
